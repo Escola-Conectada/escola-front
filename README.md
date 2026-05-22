@@ -18,6 +18,7 @@ O layout atual usa uma identidade visual com fundo claro, cards brancos, destaqu
 | Tecnologia | Uso |
 | --- | --- |
 | Nuxt 3.21.6 | Framework Vue, roteamento por arquivos, plugins e build |
+| Vite | Bundler e dev server usado pelo Nuxt 3 |
 | Vue 3 | Camada de componentes e Composition API |
 | TypeScript strict | Tipagem de stores, API e componentes |
 | Pinia | Estado global de autenticacao e stores de entidades |
@@ -82,6 +83,12 @@ Gerar build estatico:
 
 ```bash
 npm run generate
+```
+
+Validar tipos:
+
+```bash
+npm run typecheck
 ```
 
 Rodar testes:

@@ -1,4 +1,4 @@
-import type { FetchOptions } from 'ofetch'
+import type { $Fetch, FetchOptions } from 'ofetch'
 
 export type ApiClient = <T>(path: string, options?: FetchOptions<'json'>) => Promise<T>
 
@@ -11,9 +11,10 @@ interface ApiClientConfig {
 export function createApiClient(config: ApiClientConfig): ApiClient {
   return async <T>(path: string, options: FetchOptions<'json'> = {}) => {
     const headers = buildHeaders(options.headers, config.getToken())
+    const apiFetch = $fetch as unknown as $Fetch
 
     try {
-      return await $fetch<T>(path, {
+      return await apiFetch<T>(path, {
         ...options,
         baseURL: config.baseURL,
         headers

@@ -1,4 +1,4 @@
-/// <reference types="vitest" />
+import { beforeEach, vi } from 'vitest'
 
 beforeEach(() => {
   localStorage.clear()

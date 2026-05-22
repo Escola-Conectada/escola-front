@@ -8,6 +8,7 @@
     "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
+    "typecheck": "nuxt typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
     "postinstall": "nuxt prepare"
@@ -25,6 +26,8 @@
     "@vue/test-utils": "^2.4.10",
     "commander": "^13.1.0",
     "happy-dom": "^20.9.0",
-    "vitest": "^4.1.7"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.7",
+    "vue-tsc": "^3.3.1"
   }
 }

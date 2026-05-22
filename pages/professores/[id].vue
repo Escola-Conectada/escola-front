@@ -45,7 +45,7 @@
           <select v-model="idUsuario" :disabled="!editando">
             <option value="">Sem vinculo</option>
             <option v-if="usuarioAtualAusente" :value="professor?.idUsuario">
-              {{ professor.usuario.nome }} - {{ professor.usuario.descricaoPerfil }}
+              {{ professor?.usuario?.nome }} - {{ professor?.usuario?.descricaoPerfil }}
             </option>
             <option v-for="usuario in usuarios" :key="usuario.idUsuario" :value="usuario.idUsuario">
               {{ usuario.nome }} - {{ usuario.descricaoPerfil }}
