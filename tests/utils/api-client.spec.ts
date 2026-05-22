@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { buildHeaders, createApiClient, normalizeApiError } from '~/utils/api-client'
+import { buildHeaders, createApiClient, normalizeApiError, resolveApiBase } from '~/utils/api-client'
 
 describe('api-client', () => {
   it('adds the JWT bearer token when present', async () => {
@@ -23,6 +23,12 @@ describe('api-client', () => {
 
     expect(headers.get('Content-Type')).toBe('application/json')
     expect(headers.get('Authorization')).toBe('Bearer abc')
+  })
+
+  it('does not keep a localhost API URL when rendered on a public host', () => {
+    expect(resolveApiBase('http://localhost:5001/api', 'escola-high-tech.vercel.app')).toBe('/api')
+    expect(resolveApiBase('http://localhost:5001/api', 'localhost')).toBe('http://localhost:5001/api')
+    expect(resolveApiBase('', 'escola-high-tech.vercel.app')).toBe('/api')
   })
 
   it('calls the unauthorized handler on 401 responses', async () => {
@@ -53,5 +59,15 @@ describe('api-client', () => {
     })
 
     expect(message).toBe('Informe um email valido. A senha e obrigatoria.')
+  })
+
+  it('normalizes localhost network errors with deployment guidance', () => {
+    const message = normalizeApiError({
+      request: 'http://localhost:5001/api/auth/login',
+      message: '[POST] "http://localhost:5001/api/auth/login": <no response> Failed to fetch'
+    })
+
+    expect(message).toContain('NUXT_PUBLIC_API_BASE')
+    expect(message).toContain('URL publica do backend')
   })
 })

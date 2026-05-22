@@ -54,10 +54,12 @@ Variaveis suportadas:
 
 | Variavel | Padrao local | Descricao |
 | --- | --- | --- |
-| `NUXT_PUBLIC_API_BASE` | `http://localhost:5001/api` | URL base da API consumida pelo front |
+| `NUXT_PUBLIC_API_BASE` | `http://localhost:5001/api` em dev, `/api` em build sem variavel | URL base da API consumida pelo front |
 | `NUXT_APP_BASE_URL` | `/` | Base URL da aplicacao Nuxt |
 
 No Docker Compose do projeto, o front e publicado em `http://localhost:8080` e a API e apontada para `http://localhost:5000/api`.
+
+Em deploy na Vercel, configure `NUXT_PUBLIC_API_BASE` nas variaveis de ambiente do projeto com a URL publica do backend, por exemplo `https://sua-api-publica.com/api`. Nao use `localhost` em producao, porque no navegador ele aponta para a maquina do usuario.
 
 ## Como executar
 

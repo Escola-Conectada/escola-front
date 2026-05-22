@@ -12,11 +12,12 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
   return async <T>(path: string, options: FetchOptions<'json'> = {}) => {
     const headers = buildHeaders(options.headers, config.getToken())
     const apiFetch = $fetch as unknown as $Fetch
+    const baseURL = resolveApiBase(config.baseURL)
 
     try {
       return await apiFetch<T>(path, {
         ...options,
-        baseURL: config.baseURL,
+        baseURL,
         headers
       })
     } catch (error) {
@@ -27,6 +28,16 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
       throw error
     }
   }
+}
+
+export function resolveApiBase(apiBase: string, hostname = getBrowserHostname()): string {
+  const normalizedApiBase = apiBase.trim() || '/api'
+
+  if (hostname && !isLocalHostname(hostname) && isLocalApiUrl(normalizedApiBase)) {
+    return '/api'
+  }
+
+  return normalizedApiBase
 }
 
 export function buildHeaders(headers: HeadersInit | undefined, token: string | null): Headers {
@@ -50,6 +61,7 @@ export function normalizeApiError(error: unknown): string {
 
   const maybeError = error as {
     data?: unknown
+    request?: unknown
     response?: { _data?: unknown }
     message?: string
   }
@@ -68,6 +80,16 @@ export function normalizeApiError(error: unknown): string {
     }
   }
 
+  if (isNetworkError(maybeError)) {
+    const request = String(maybeError.request ?? '')
+
+    if (isLocalApiUrl(request)) {
+      return 'A API publicada esta configurada para localhost. Configure NUXT_PUBLIC_API_BASE com a URL publica do backend.'
+    }
+
+    return 'Nao foi possivel conectar a API. Verifique se NUXT_PUBLIC_API_BASE aponta para a URL publica do backend.'
+  }
+
   return maybeError.message || 'Nao foi possivel concluir a operacao.'
 }
 
@@ -82,4 +104,25 @@ function isUnauthorized(error: unknown): boolean {
   }
 
   return maybeError.status === 401 || maybeError.response?.status === 401
+}
+
+function getBrowserHostname(): string {
+  return typeof window === 'undefined' ? '' : window.location.hostname
+}
+
+function isLocalHostname(hostname: string): boolean {
+  return ['localhost', '127.0.0.1', '::1'].includes(hostname)
+}
+
+function isLocalApiUrl(value: string): boolean {
+  try {
+    return isLocalHostname(new URL(value).hostname)
+  } catch {
+    return false
+  }
+}
+
+function isNetworkError(error: { message?: string }): boolean {
+  const message = error.message ?? ''
+  return message.includes('Failed to fetch') || message.includes('<no response>')
 }
