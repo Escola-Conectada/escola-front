@@ -13,20 +13,30 @@
       <div class="grid gap-5">
         <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
           <span>Nome</span>
-          <input v-model.trim="form.nome" class="min-h-11 rounded-md border border-[#ccd8e5] px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10" type="text" required maxlength="100" />
-          <span class="text-xs font-extrabold text-[#62728a]">{{ form.nome.length }}/100</span>
+          <input v-model.trim="form.nome" class="min-h-11 rounded-md border border-[#ccd8e5] px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10" type="text" required :maxlength="USER_TEXT_FIELD_MAX_LENGTH" />
+          <span class="text-xs font-extrabold text-[#62728a]">{{ form.nome.length }}/{{ USER_TEXT_FIELD_MAX_LENGTH }}</span>
         </label>
 
         <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
           <span>E-mail</span>
-          <input v-model.trim="form.email" class="min-h-11 rounded-md border border-[#ccd8e5] px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10" type="email" required maxlength="150" />
-          <span class="text-xs font-extrabold text-[#62728a]">{{ form.email.length }}/150</span>
+          <input v-model.trim="form.email" class="min-h-11 rounded-md border border-[#ccd8e5] px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10" type="email" required :maxlength="USER_TEXT_FIELD_MAX_LENGTH" />
+          <span class="text-xs font-extrabold text-[#62728a]">{{ form.email.length }}/{{ USER_TEXT_FIELD_MAX_LENGTH }}</span>
         </label>
 
         <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
           <span>Telefone</span>
-          <input v-model.trim="form.telefone" class="min-h-11 rounded-md border border-[#ccd8e5] px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10" type="tel" required maxlength="20" placeholder="+55 (11) 99999-9999" />
-          <span class="text-xs font-extrabold text-[#62728a]">{{ form.telefone.length }}/20</span>
+          <input
+            :value="form.telefone"
+            class="min-h-11 rounded-md border border-[#ccd8e5] px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+            type="tel"
+            required
+            inputmode="numeric"
+            autocomplete="tel"
+            :maxlength="BRAZIL_PHONE_MASK_MAX_LENGTH"
+            :placeholder="BRAZIL_PHONE_PLACEHOLDER"
+            @input="atualizarTelefone"
+          />
+          <span class="text-xs font-extrabold text-[#62728a]">{{ form.telefone.length }}/{{ BRAZIL_PHONE_MASK_MAX_LENGTH }}</span>
         </label>
 
         <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
@@ -117,7 +127,7 @@
             <tr v-for="usuario in usuariosPaginados" :key="usuario.idUsuario" class="border-t border-[#d4dee9]">
               <td class="px-4 py-4 font-semibold text-[#243044]">{{ usuario.nome }}</td>
               <td class="px-4 py-4 text-[#243044]">{{ usuario.email }}</td>
-              <td class="px-4 py-4 text-[#243044]">{{ usuario.telefone || '-' }}</td>
+              <td class="px-4 py-4 text-[#243044]">{{ formatBrazilPhone(usuario.telefone) || '-' }}</td>
               <td class="px-4 py-4 text-[#243044]">{{ usuario.descricaoPerfil }}</td>
               <td class="px-4 py-4">
                 <div class="flex justify-center gap-2">
@@ -178,7 +188,7 @@
             </span>
           </div>
           <p class="m-0 mt-3 text-sm text-[#243044]">
-            <strong>Telefone:</strong> {{ usuario.telefone || '-' }}
+            <strong>Telefone:</strong> {{ formatBrazilPhone(usuario.telefone) || '-' }}
           </p>
           <div class="mt-4 flex flex-wrap gap-2">
             <NuxtLink
@@ -252,6 +262,13 @@
 import { ChevronLeft, ChevronRight, Eye, Pencil, Plus, RefreshCcw, Search, Trash2 } from '@lucide/vue'
 import type { Perfil, UsuarioCreate, UsuarioSummary } from '~/types/api'
 import { normalizeApiError } from '~/utils/api-client'
+import {
+  BRAZIL_PHONE_MASK_MAX_LENGTH,
+  BRAZIL_PHONE_PLACEHOLDER,
+  formatBrazilPhone,
+  isCompleteBrazilPhone,
+  normalizeBrazilPhoneForApi
+} from '~/utils/br-phone'
 import { DUPLICATE_USER_EMAIL_MESSAGE, isDuplicateUserEmail } from '~/utils/usuario-validation'
 
 definePageMeta({
@@ -271,6 +288,8 @@ const busca = ref('')
 const pagina = ref(1)
 const porPagina = 10
 const editandoId = ref<number | null>(null)
+const USER_TEXT_FIELD_MAX_LENGTH = 50
+const PHONE_FORMAT_ERROR = 'Informe um telefone valido no formato +55 (xx) xxxxx-xxxx.'
 const form = reactive<UsuarioCreate>({
   nome: '',
   email: '',
@@ -284,7 +303,7 @@ const usuariosFiltrados = computed(() => {
   if (!termo) return usuarios.value
 
   return usuarios.value.filter((usuario) =>
-    [usuario.nome, usuario.email, usuario.telefone, usuario.descricaoPerfil]
+    [usuario.nome, usuario.email, usuario.telefone, formatBrazilPhone(usuario.telefone), usuario.descricaoPerfil]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(termo))
   )
@@ -344,7 +363,7 @@ function editar(usuario: UsuarioSummary) {
   editandoId.value = usuario.idUsuario
   form.nome = usuario.nome
   form.email = usuario.email
-  form.telefone = usuario.telefone
+  form.telefone = formatBrazilPhone(usuario.telefone)
   form.idPerfil = usuario.idPerfil
   mensagem.value = ''
   erro.value = ''
@@ -358,9 +377,26 @@ function limparForm() {
   form.idPerfil = 0
 }
 
+function atualizarTelefone(event: Event) {
+  const input = event.target as HTMLInputElement
+  form.telefone = formatBrazilPhone(input.value)
+}
+
+function montarPayload(): UsuarioCreate {
+  return {
+    ...form,
+    telefone: normalizeBrazilPhoneForApi(form.telefone)
+  }
+}
+
 async function salvar() {
   erro.value = ''
   mensagem.value = ''
+
+  if (!isCompleteBrazilPhone(form.telefone)) {
+    erro.value = PHONE_FORMAT_ERROR
+    return
+  }
 
   if (isDuplicateUserEmail(usuarios.value, form.email, editandoId.value)) {
     erro.value = DUPLICATE_USER_EMAIL_MESSAGE
@@ -370,16 +406,18 @@ async function salvar() {
   salvando.value = true
 
   try {
+    const payload = montarPayload()
+
     if (editandoId.value) {
       await $api<UsuarioSummary>(`/usuarios/${editandoId.value}`, {
         method: 'PUT',
-        body: { ...form }
+        body: payload
       })
       mensagem.value = 'Usuario atualizado.'
     } else {
       await $api<UsuarioSummary>('/usuarios', {
         method: 'POST',
-        body: { ...form }
+        body: payload
       })
       mensagem.value = 'Usuario cadastrado.'
     }

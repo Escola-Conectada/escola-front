@@ -9,17 +9,29 @@
       <div class="grid gap-4 md:grid-cols-2">
         <label>
           <span>Nome</span>
-          <input v-model.trim="form.nome" type="text" required maxlength="100" />
+          <input v-model.trim="form.nome" type="text" required :maxlength="USER_TEXT_FIELD_MAX_LENGTH" />
+          <span class="text-xs font-extrabold text-slate-500">{{ form.nome.length }}/{{ USER_TEXT_FIELD_MAX_LENGTH }}</span>
         </label>
 
         <label>
           <span>Email</span>
-          <input v-model.trim="form.email" type="email" required maxlength="150" />
+          <input v-model.trim="form.email" type="email" required :maxlength="USER_TEXT_FIELD_MAX_LENGTH" />
+          <span class="text-xs font-extrabold text-slate-500">{{ form.email.length }}/{{ USER_TEXT_FIELD_MAX_LENGTH }}</span>
         </label>
 
         <label>
           <span>Telefone</span>
-          <input v-model.trim="form.telefone" type="tel" required maxlength="20" />
+          <input
+            :value="form.telefone"
+            type="tel"
+            required
+            inputmode="numeric"
+            autocomplete="tel"
+            :maxlength="BRAZIL_PHONE_MASK_MAX_LENGTH"
+            :placeholder="BRAZIL_PHONE_PLACEHOLDER"
+            @input="atualizarTelefone"
+          />
+          <span class="text-xs font-extrabold text-slate-500">{{ form.telefone.length }}/{{ BRAZIL_PHONE_MASK_MAX_LENGTH }}</span>
         </label>
 
         <label>
@@ -54,6 +66,13 @@
 <script setup lang="ts">
 import type { Perfil, UsuarioCreate, UsuarioSummary } from '~/types/api'
 import { normalizeApiError } from '~/utils/api-client'
+import {
+  BRAZIL_PHONE_MASK_MAX_LENGTH,
+  BRAZIL_PHONE_PLACEHOLDER,
+  formatBrazilPhone,
+  isCompleteBrazilPhone,
+  normalizeBrazilPhoneForApi
+} from '~/utils/br-phone'
 import { DUPLICATE_USER_EMAIL_MESSAGE, isDuplicateUserEmail } from '~/utils/usuario-validation'
 
 definePageMeta({
@@ -65,6 +84,8 @@ const perfis = ref<Perfil[]>([])
 const usuarios = ref<UsuarioSummary[]>([])
 const salvando = ref(false)
 const erro = ref('')
+const USER_TEXT_FIELD_MAX_LENGTH = 50
+const PHONE_FORMAT_ERROR = 'Informe um telefone valido no formato +55 (xx) xxxxx-xxxx.'
 const form = reactive<UsuarioCreate>({
   nome: '',
   email: '',
@@ -85,8 +106,25 @@ onMounted(async () => {
   }
 })
 
+function atualizarTelefone(event: Event) {
+  const input = event.target as HTMLInputElement
+  form.telefone = formatBrazilPhone(input.value)
+}
+
+function montarPayload(): UsuarioCreate {
+  return {
+    ...form,
+    telefone: normalizeBrazilPhoneForApi(form.telefone)
+  }
+}
+
 async function salvar() {
   erro.value = ''
+
+  if (!isCompleteBrazilPhone(form.telefone)) {
+    erro.value = PHONE_FORMAT_ERROR
+    return
+  }
 
   if (isDuplicateUserEmail(usuarios.value, form.email)) {
     erro.value = DUPLICATE_USER_EMAIL_MESSAGE
@@ -98,7 +136,7 @@ async function salvar() {
   try {
     const created = await $api<UsuarioSummary>('/usuarios', {
       method: 'POST',
-      body: { ...form }
+      body: montarPayload()
     })
     await navigateTo(`/usuarios/${created.idUsuario}`)
   } catch (err) {

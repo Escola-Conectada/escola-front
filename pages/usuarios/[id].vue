@@ -37,17 +37,30 @@
       <div class="grid gap-4 md:grid-cols-2">
         <label>
           <span>Nome</span>
-          <input v-model.trim="form.nome" type="text" required maxlength="100" :disabled="!editando" />
+          <input v-model.trim="form.nome" type="text" required :maxlength="USER_TEXT_FIELD_MAX_LENGTH" :disabled="!editando" />
+          <span class="text-xs font-extrabold text-slate-500">{{ form.nome.length }}/{{ USER_TEXT_FIELD_MAX_LENGTH }}</span>
         </label>
 
         <label>
           <span>Email</span>
-          <input v-model.trim="form.email" type="email" required maxlength="150" :disabled="!editando" />
+          <input v-model.trim="form.email" type="email" required :maxlength="USER_TEXT_FIELD_MAX_LENGTH" :disabled="!editando" />
+          <span class="text-xs font-extrabold text-slate-500">{{ form.email.length }}/{{ USER_TEXT_FIELD_MAX_LENGTH }}</span>
         </label>
 
         <label>
           <span>Telefone</span>
-          <input v-model.trim="form.telefone" type="tel" required maxlength="20" :disabled="!editando" />
+          <input
+            :value="form.telefone"
+            type="tel"
+            required
+            inputmode="numeric"
+            autocomplete="tel"
+            :maxlength="BRAZIL_PHONE_MASK_MAX_LENGTH"
+            :placeholder="BRAZIL_PHONE_PLACEHOLDER"
+            :disabled="!editando"
+            @input="atualizarTelefone"
+          />
+          <span class="text-xs font-extrabold text-slate-500">{{ form.telefone.length }}/{{ BRAZIL_PHONE_MASK_MAX_LENGTH }}</span>
         </label>
 
         <label>
@@ -76,6 +89,13 @@
 <script setup lang="ts">
 import type { Perfil, UsuarioSummary, UsuarioUpdate } from '~/types/api'
 import { normalizeApiError } from '~/utils/api-client'
+import {
+  BRAZIL_PHONE_MASK_MAX_LENGTH,
+  BRAZIL_PHONE_PLACEHOLDER,
+  formatBrazilPhone,
+  isCompleteBrazilPhone,
+  normalizeBrazilPhoneForApi
+} from '~/utils/br-phone'
 import { DUPLICATE_USER_EMAIL_MESSAGE, isDuplicateUserEmail } from '~/utils/usuario-validation'
 
 definePageMeta({
@@ -92,6 +112,8 @@ const editando = ref(false)
 const salvando = ref(false)
 const erro = ref('')
 const mensagem = ref('')
+const USER_TEXT_FIELD_MAX_LENGTH = 50
+const PHONE_FORMAT_ERROR = 'Informe um telefone valido no formato +55 (xx) xxxxx-xxxx.'
 const form = reactive<UsuarioUpdate>({
   nome: '',
   email: '',
@@ -132,7 +154,7 @@ async function carregar() {
 function preencherForm(value: UsuarioSummary) {
   form.nome = value.nome
   form.email = value.email
-  form.telefone = value.telefone
+  form.telefone = formatBrazilPhone(value.telefone)
   form.idPerfil = value.idPerfil
 }
 
@@ -144,9 +166,26 @@ function cancelar() {
   editando.value = false
 }
 
+function atualizarTelefone(event: Event) {
+  const input = event.target as HTMLInputElement
+  form.telefone = formatBrazilPhone(input.value)
+}
+
+function montarPayload(): UsuarioUpdate {
+  return {
+    ...form,
+    telefone: normalizeBrazilPhoneForApi(form.telefone)
+  }
+}
+
 async function salvar() {
   erro.value = ''
   mensagem.value = ''
+
+  if (!isCompleteBrazilPhone(form.telefone)) {
+    erro.value = PHONE_FORMAT_ERROR
+    return
+  }
 
   if (isDuplicateUserEmail(usuarios.value, form.email, usuarioId.value)) {
     erro.value = DUPLICATE_USER_EMAIL_MESSAGE
@@ -158,7 +197,7 @@ async function salvar() {
   try {
     usuario.value = await $api<UsuarioSummary>(`/usuarios/${usuarioId.value}`, {
       method: 'PUT',
-      body: { ...form }
+      body: montarPayload()
     })
     preencherForm(usuario.value)
     mensagem.value = 'Usuario atualizado.'

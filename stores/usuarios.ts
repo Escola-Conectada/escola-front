@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { useNuxtApp } from '#app'
 import type { Perfil, UsuarioCreate, UsuarioSummary, UsuarioUpdate } from '~/types/api'
 import { normalizeApiError } from '~/utils/api-client'
+import { normalizeBrazilPhoneForApi } from '~/utils/br-phone'
 import { DUPLICATE_USER_EMAIL_MESSAGE, isDuplicateUserEmail } from '~/utils/usuario-validation'
 
 export const useUsuariosStore = defineStore('usuarios', () => {
@@ -43,7 +44,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
       const { $api } = useNuxtApp()
       const created = await $api<UsuarioSummary>('/usuarios', {
         method: 'POST',
-        body: payload
+        body: normalizeUsuarioPayload(payload)
       })
 
       usuarios.value = [created, ...usuarios.value]
@@ -66,7 +67,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
       const { $api } = useNuxtApp()
       const updated = await $api<UsuarioSummary>(`/usuarios/${idUsuario}`, {
         method: 'PUT',
-        body: payload
+        body: normalizeUsuarioPayload(payload)
       })
 
       usuarios.value = usuarios.value.map((usuario) =>
@@ -107,6 +108,13 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     error.value = DUPLICATE_USER_EMAIL_MESSAGE
     throw new Error(DUPLICATE_USER_EMAIL_MESSAGE)
+  }
+
+  function normalizeUsuarioPayload(payload: UsuarioCreate | UsuarioUpdate) {
+    return {
+      ...payload,
+      telefone: normalizeBrazilPhoneForApi(payload.telefone)
+    }
   }
 
   return {
