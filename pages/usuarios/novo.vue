@@ -2,7 +2,7 @@
   <section class="grid gap-6">
     <div>
       <p class="eyebrow">Usuarios</p>
-      <h1 class="m-0 text-3xl font-extrabold text-slate-900">Novo usuario</h1>
+      <h1 class="m-0 text-3xl font-extrabold text-slate-900">{{ auth.isProfessor ? 'Novo aluno' : 'Novo usuario' }}</h1>
     </div>
 
     <form class="grid gap-5 rounded-lg border border-slate-200 bg-white p-5" @submit.prevent="salvar">
@@ -35,11 +35,11 @@
         </label>
 
         <label>
-          <span>Perfil</span>
-          <select v-model.number="form.idPerfil" required>
+          <span>Tipo de usuario</span>
+          <select v-model.number="form.idPerfil" required :disabled="perfisDisponiveis.length <= 1">
             <option disabled :value="0">Selecione</option>
-            <option v-for="perfil in perfis" :key="perfil.idPerfil" :value="perfil.idPerfil">
-              {{ perfil.descricaoPerfil }}
+            <option v-for="perfil in perfisDisponiveis" :key="perfil.idPerfil" :value="perfil.idPerfil">
+              {{ formatPerfilLabel(perfil.descricaoPerfil) }}
             </option>
           </select>
         </label>
@@ -56,7 +56,7 @@
           Cancelar
         </NuxtLink>
         <button class="rounded-md bg-[#147f72] px-4 py-2 text-sm font-bold text-white hover:bg-[#0f6c61]" type="submit" :disabled="salvando">
-          {{ salvando ? 'Salvando...' : 'Salvar usuario' }}
+          {{ salvando ? 'Salvando...' : auth.isProfessor ? 'Salvar aluno' : 'Salvar usuario' }}
         </button>
       </div>
     </form>
@@ -73,36 +73,59 @@ import {
   isCompleteBrazilPhone,
   normalizeBrazilPhoneForApi
 } from '~/utils/br-phone'
+import {
+  canCreateAlunoUsuarios,
+  filterPerfisForUsuarioCreation,
+  formatPerfilLabel,
+  getDefaultPerfilId
+} from '~/utils/usuario-permissions'
 import { DUPLICATE_USER_EMAIL_MESSAGE, isDuplicateUserEmail } from '~/utils/usuario-validation'
 
 definePageMeta({
-  roles: ['Administrador']
+  roles: []
 })
 
 const { $api } = useNuxtApp()
+const auth = useAuthStore()
 const perfis = ref<Perfil[]>([])
 const usuarios = ref<UsuarioSummary[]>([])
 const salvando = ref(false)
 const erro = ref('')
 const USER_TEXT_FIELD_MAX_LENGTH = 50
 const PHONE_FORMAT_ERROR = 'Informe um telefone valido no formato +55 (xx) xxxxx-xxxx.'
+const REQUIRED_FIELDS_ERROR = 'Nome, e-mail e telefone sao obrigatorios.'
+const REQUIRED_PROFILE_ERROR = 'Informe o tipo de usuario.'
 const form = reactive<UsuarioCreate>({
   nome: '',
   email: '',
   telefone: '',
   idPerfil: 0
 })
+const podeCadastrar = computed(() => canCreateAlunoUsuarios(auth.perfil))
+const perfisDisponiveis = computed(() => filterPerfisForUsuarioCreation(perfis.value, auth.usuario))
 
 onMounted(async () => {
+  if (!podeCadastrar.value) {
+    await navigateTo('/usuarios', { replace: true })
+    return
+  }
+
   try {
-    const [perfisResponse, usuariosResponse] = await Promise.all([
-      $api<Perfil[]>('/usuarios/perfis'),
-      $api<UsuarioSummary[]>('/usuarios')
-    ])
-    perfis.value = perfisResponse
-    usuarios.value = usuariosResponse
+    perfis.value = await $api<Perfil[]>('/usuarios/perfis')
+    form.idPerfil = getDefaultPerfilId(perfis.value, auth.usuario)
+
+    if (!perfisDisponiveis.value.length) {
+      erro.value = 'Nenhum tipo de usuario permitido foi retornado pela API.'
+    }
   } catch (err) {
     erro.value = normalizeApiError(err)
+    return
+  }
+
+  try {
+    usuarios.value = await $api<UsuarioSummary[]>('/usuarios')
+  } catch {
+    usuarios.value = auth.usuario ? [auth.usuario] : []
   }
 })
 
@@ -113,16 +136,33 @@ function atualizarTelefone(event: Event) {
 
 function montarPayload(): UsuarioCreate {
   return {
-    ...form,
-    telefone: normalizeBrazilPhoneForApi(form.telefone)
+    nome: form.nome.trim(),
+    email: form.email.trim(),
+    telefone: normalizeBrazilPhoneForApi(form.telefone),
+    idPerfil: form.idPerfil
   }
 }
 
 async function salvar() {
   erro.value = ''
 
+  if (!podeCadastrar.value) {
+    await navigateTo('/usuarios', { replace: true })
+    return
+  }
+
+  if (!form.nome.trim() || !form.email.trim() || !form.telefone.trim()) {
+    erro.value = REQUIRED_FIELDS_ERROR
+    return
+  }
+
   if (!isCompleteBrazilPhone(form.telefone)) {
     erro.value = PHONE_FORMAT_ERROR
+    return
+  }
+
+  if (!form.idPerfil) {
+    erro.value = REQUIRED_PROFILE_ERROR
     return
   }
 

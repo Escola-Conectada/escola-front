@@ -1,13 +1,13 @@
 <template>
   <section class="grid gap-5 xl:grid-cols-[minmax(280px,360px)_minmax(0,1fr)]">
     <form
-      v-if="auth.isAdmin"
+      v-if="exibeFormulario"
       class="rounded-lg border border-[#d4dee9] bg-white p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] sm:p-6"
       @submit.prevent="salvar"
     >
-      <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Cadastro</p>
+      <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">{{ editandoId ? 'Edicao' : 'Cadastro' }}</p>
       <h2 class="mb-8 mt-2 text-xl font-normal text-[#071d3b]">
-        {{ editandoId ? 'Editar usuario' : 'Novo usuario' }}
+        {{ tituloFormulario }}
       </h2>
 
       <div class="grid gap-5">
@@ -40,16 +40,21 @@
         </label>
 
         <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
-          <span>Perfil</span>
-          <select v-model.number="form.idPerfil" class="min-h-11 rounded-md border border-[#ccd8e5] px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10" required>
+          <span>Tipo de usuario</span>
+          <select
+            v-model.number="form.idPerfil"
+            class="min-h-11 rounded-md border border-[#ccd8e5] px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+            required
+            :disabled="!podeAlterarPerfilNoFormulario"
+          >
             <option disabled :value="0">Selecione</option>
-            <option v-for="perfil in perfis" :key="perfil.idPerfil" :value="perfil.idPerfil">
-              {{ perfil.descricaoPerfil }}
+            <option v-for="perfil in perfisFormulario" :key="perfil.idPerfil" :value="perfil.idPerfil">
+              {{ formatPerfilLabel(perfil.descricaoPerfil) }}
             </option>
           </select>
         </label>
 
-        <p class="m-0 rounded-md border border-[#d7e8ff] bg-[#eff6ff] p-3 text-sm font-semibold text-[#24446d]">
+        <p v-if="!editandoId" class="m-0 rounded-md border border-[#d7e8ff] bg-[#eff6ff] p-3 text-sm font-semibold text-[#24446d]">
           A senha inicial sera definida automaticamente como <strong>Senha@252525</strong>.
         </p>
 
@@ -63,7 +68,7 @@
             :disabled="salvando"
           >
             <Plus class="h-5 w-5" aria-hidden="true" />
-            {{ salvando ? 'Salvando...' : editandoId ? 'Atualizar usuario' : 'Cadastrar usuario' }}
+            {{ textoBotaoSalvar }}
           </button>
           <button
             v-if="editandoId"
@@ -84,14 +89,14 @@
       <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Consulta</p>
       <h2 class="mb-3 mt-2 text-xl font-normal text-[#071d3b]">Usuarios</h2>
       <p class="m-0 text-sm font-semibold text-[#62728a]">
-        Seu perfil permite consultar os usuarios cadastrados.
+        {{ textoPermissaoConsulta }}
       </p>
     </aside>
 
     <article class="min-w-0 rounded-lg border border-[#d4dee9] bg-white p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] sm:p-6">
       <div class="flex items-start justify-between gap-4">
         <div>
-          <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">{{ usuarios.length }} usuario(s)</p>
+          <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">{{ usuariosVisiveis.length }} usuario(s)</p>
           <h2 class="m-0 mt-2 text-xl font-normal text-[#071d3b]">Usuarios</h2>
         </div>
         <button
@@ -119,7 +124,7 @@
               <th class="px-4 py-4">Nome</th>
               <th class="px-4 py-4">E-mail</th>
               <th class="px-4 py-4">Telefone</th>
-              <th class="px-4 py-4">Perfil</th>
+              <th class="px-4 py-4">Tipo</th>
               <th class="px-4 py-4 text-center">Acoes</th>
             </tr>
           </thead>
@@ -128,7 +133,7 @@
               <td class="px-4 py-4 font-semibold text-[#243044]">{{ usuario.nome }}</td>
               <td class="px-4 py-4 text-[#243044]">{{ usuario.email }}</td>
               <td class="px-4 py-4 text-[#243044]">{{ formatBrazilPhone(usuario.telefone) || '-' }}</td>
-              <td class="px-4 py-4 text-[#243044]">{{ usuario.descricaoPerfil }}</td>
+              <td class="px-4 py-4 text-[#243044]">{{ formatPerfilLabel(usuario.descricaoPerfil) }}</td>
               <td class="px-4 py-4">
                 <div class="flex justify-center gap-2">
                   <NuxtLink
@@ -140,7 +145,7 @@
                     <Eye class="h-5 w-5" aria-hidden="true" />
                   </NuxtLink>
                   <button
-                    v-if="auth.isAdmin"
+                    v-if="podeEditarUsuario(usuario)"
                     class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
                     type="button"
                     title="Editar usuario"
@@ -150,7 +155,7 @@
                     <Pencil class="h-5 w-5" aria-hidden="true" />
                   </button>
                   <button
-                    v-if="auth.isAdmin"
+                    v-if="podeExcluirUsuario(usuario)"
                     class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#ffe1e3] text-[#dc2626] transition hover:bg-[#ffd4d7]"
                     type="button"
                     title="Excluir usuario"
@@ -184,7 +189,7 @@
               <p class="m-0 mt-1 break-all text-sm text-[#51627a]">{{ usuario.email }}</p>
             </div>
             <span class="rounded-md bg-[#eaf4f1] px-2 py-1 text-xs font-extrabold text-[#006b61]">
-              {{ usuario.descricaoPerfil }}
+              {{ formatPerfilLabel(usuario.descricaoPerfil) }}
             </span>
           </div>
           <p class="m-0 mt-3 text-sm text-[#243044]">
@@ -200,7 +205,7 @@
               <Eye class="h-5 w-5" aria-hidden="true" />
             </NuxtLink>
             <button
-              v-if="auth.isAdmin"
+              v-if="podeEditarUsuario(usuario)"
               class="inline-flex h-10 flex-1 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
               type="button"
               title="Editar usuario"
@@ -210,7 +215,7 @@
               <Pencil class="h-5 w-5" aria-hidden="true" />
             </button>
             <button
-              v-if="auth.isAdmin"
+              v-if="podeExcluirUsuario(usuario)"
               class="inline-flex h-10 flex-1 items-center justify-center rounded-md bg-[#ffe1e3] text-[#dc2626] transition hover:bg-[#ffd4d7]"
               type="button"
               title="Excluir usuario"
@@ -269,10 +274,20 @@ import {
   isCompleteBrazilPhone,
   normalizeBrazilPhoneForApi
 } from '~/utils/br-phone'
+import {
+  canCreateAlunoUsuarios,
+  canDeleteUsuario,
+  canEditUsuario,
+  canChangeUsuarioPerfil,
+  canViewUsuarioInList,
+  filterPerfisForUsuarioCreation,
+  formatPerfilLabel,
+  getDefaultPerfilId
+} from '~/utils/usuario-permissions'
 import { DUPLICATE_USER_EMAIL_MESSAGE, isDuplicateUserEmail } from '~/utils/usuario-validation'
 
 definePageMeta({
-  roles: ['Administrador', 'Contribuinte']
+  roles: []
 })
 
 const { $api } = useNuxtApp()
@@ -290,6 +305,8 @@ const porPagina = 10
 const editandoId = ref<number | null>(null)
 const USER_TEXT_FIELD_MAX_LENGTH = 50
 const PHONE_FORMAT_ERROR = 'Informe um telefone valido no formato +55 (xx) xxxxx-xxxx.'
+const REQUIRED_FIELDS_ERROR = 'Nome, e-mail e telefone sao obrigatorios.'
+const REQUIRED_PROFILE_ERROR = 'Informe o tipo de usuario.'
 const form = reactive<UsuarioCreate>({
   nome: '',
   email: '',
@@ -297,13 +314,51 @@ const form = reactive<UsuarioCreate>({
   idPerfil: 0
 })
 
+const usuariosVisiveis = computed(() =>
+  usuarios.value.filter((usuario) => canViewUsuarioInList(auth.usuario, usuario))
+)
+const podeCadastrarUsuarios = computed(() => canCreateAlunoUsuarios(auth.perfil))
+const usuarioEmEdicao = computed(() =>
+  editandoId.value ? usuarios.value.find((usuario) => usuario.idUsuario === editandoId.value) ?? null : null
+)
+const exibeFormulario = computed(() => podeCadastrarUsuarios.value || Boolean(editandoId.value))
+const perfisFormulario = computed<Perfil[]>(() => {
+  if (editandoId.value && !canChangeUsuarioPerfil(auth.usuario)) {
+    return usuarioEmEdicao.value
+      ? [{ idPerfil: usuarioEmEdicao.value.idPerfil, descricaoPerfil: usuarioEmEdicao.value.descricaoPerfil }]
+      : []
+  }
+
+  return filterPerfisForUsuarioCreation(perfis.value, auth.usuario)
+})
+const podeAlterarPerfilNoFormulario = computed(() =>
+  canChangeUsuarioPerfil(auth.usuario) && perfisFormulario.value.length > 1
+)
+const tituloFormulario = computed(() => {
+  if (editandoId.value) return 'Editar usuario'
+  if (auth.isProfessor) return 'Novo aluno'
+
+  return 'Novo usuario'
+})
+const textoBotaoSalvar = computed(() => {
+  if (salvando.value) return 'Salvando...'
+  if (editandoId.value) return 'Atualizar usuario'
+
+  return auth.isProfessor ? 'Cadastrar aluno' : 'Cadastrar usuario'
+})
+const textoPermissaoConsulta = computed(() => {
+  if (auth.isAluno) return 'Seu perfil permite corrigir seus dados cadastrais.'
+  if (auth.isProfessor) return 'Seu perfil permite cadastrar alunos e consultar os usuarios permitidos.'
+
+  return 'Seu perfil permite consultar os usuarios cadastrados.'
+})
 const usuariosFiltrados = computed(() => {
   const termo = busca.value.toLowerCase()
 
-  if (!termo) return usuarios.value
+  if (!termo) return usuariosVisiveis.value
 
-  return usuarios.value.filter((usuario) =>
-    [usuario.nome, usuario.email, usuario.telefone, formatBrazilPhone(usuario.telefone), usuario.descricaoPerfil]
+  return usuariosVisiveis.value.filter((usuario) =>
+    [usuario.nome, usuario.email, usuario.telefone, formatBrazilPhone(usuario.telefone), usuario.descricaoPerfil, formatPerfilLabel(usuario.descricaoPerfil)]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(termo))
   )
@@ -333,7 +388,7 @@ watch(totalPaginas, (total) => {
 onMounted(async () => {
   await carregar()
 
-  if (auth.isAdmin) {
+  if (podeCadastrarUsuarios.value || canChangeUsuarioPerfil(auth.usuario)) {
     await carregarPerfis()
   }
 })
@@ -345,7 +400,17 @@ async function carregar() {
   try {
     usuarios.value = await $api<UsuarioSummary[]>('/usuarios')
   } catch (err) {
-    erroLista.value = normalizeApiError(err)
+    if (auth.usuario) {
+      try {
+        const usuario = await $api<UsuarioSummary>(`/usuarios/${auth.usuario.idUsuario}`)
+        usuarios.value = [usuario]
+        return
+      } catch {
+        usuarios.value = [auth.usuario]
+      }
+    } else {
+      erroLista.value = normalizeApiError(err)
+    }
   } finally {
     carregando.value = false
   }
@@ -354,12 +419,19 @@ async function carregar() {
 async function carregarPerfis() {
   try {
     perfis.value = await $api<Perfil[]>('/usuarios/perfis')
+    if (!editandoId.value) {
+      form.idPerfil = getDefaultPerfilId(perfis.value, auth.usuario)
+    }
   } catch (err) {
     erro.value = normalizeApiError(err)
   }
 }
 
 function editar(usuario: UsuarioSummary) {
+  if (!canEditUsuario(auth.usuario, usuario)) {
+    return
+  }
+
   editandoId.value = usuario.idUsuario
   form.nome = usuario.nome
   form.email = usuario.email
@@ -374,7 +446,7 @@ function limparForm() {
   form.nome = ''
   form.email = ''
   form.telefone = ''
-  form.idPerfil = 0
+  form.idPerfil = getDefaultPerfilId(perfis.value, auth.usuario)
 }
 
 function atualizarTelefone(event: Event) {
@@ -384,19 +456,45 @@ function atualizarTelefone(event: Event) {
 
 function montarPayload(): UsuarioCreate {
   return {
-    ...form,
-    telefone: normalizeBrazilPhoneForApi(form.telefone)
+    nome: form.nome.trim(),
+    email: form.email.trim(),
+    telefone: normalizeBrazilPhoneForApi(form.telefone),
+    idPerfil: form.idPerfil
   }
+}
+
+function validarFormulario() {
+  if (!form.nome.trim() || !form.email.trim() || !form.telefone.trim()) {
+    erro.value = REQUIRED_FIELDS_ERROR
+    return false
+  }
+
+  if (!isCompleteBrazilPhone(form.telefone)) {
+    erro.value = PHONE_FORMAT_ERROR
+    return false
+  }
+
+  if (!form.idPerfil) {
+    erro.value = REQUIRED_PROFILE_ERROR
+    return false
+  }
+
+  return true
+}
+
+function podeEditarUsuario(usuario: UsuarioSummary) {
+  return canEditUsuario(auth.usuario, usuario)
+}
+
+function podeExcluirUsuario(_usuario: UsuarioSummary) {
+  return canDeleteUsuario(auth.usuario)
 }
 
 async function salvar() {
   erro.value = ''
   mensagem.value = ''
 
-  if (!isCompleteBrazilPhone(form.telefone)) {
-    erro.value = PHONE_FORMAT_ERROR
-    return
-  }
+  if (!validarFormulario()) return
 
   if (isDuplicateUserEmail(usuarios.value, form.email, editandoId.value)) {
     erro.value = DUPLICATE_USER_EMAIL_MESSAGE
@@ -407,19 +505,24 @@ async function salvar() {
 
   try {
     const payload = montarPayload()
+    let usuarioSalvo: UsuarioSummary
 
     if (editandoId.value) {
-      await $api<UsuarioSummary>(`/usuarios/${editandoId.value}`, {
+      usuarioSalvo = await $api<UsuarioSummary>(`/usuarios/${editandoId.value}`, {
         method: 'PUT',
         body: payload
       })
       mensagem.value = 'Usuario atualizado.'
     } else {
-      await $api<UsuarioSummary>('/usuarios', {
+      usuarioSalvo = await $api<UsuarioSummary>('/usuarios', {
         method: 'POST',
         body: payload
       })
       mensagem.value = 'Usuario cadastrado.'
+    }
+
+    if (usuarioSalvo.idUsuario === auth.usuario?.idUsuario) {
+      auth.updateUsuario(usuarioSalvo)
     }
 
     limparForm()
@@ -432,6 +535,10 @@ async function salvar() {
 }
 
 async function excluir(usuario: UsuarioSummary) {
+  if (!podeExcluirUsuario(usuario)) {
+    return
+  }
+
   if (!confirm(`Excluir o usuario ${usuario.nome}?`)) {
     return
   }

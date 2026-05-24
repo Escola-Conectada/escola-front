@@ -55,10 +55,7 @@ const route = useRoute()
 
 const nomeUsuario = computed(() => auth.usuario?.nome || auth.perfil || 'Usuario')
 const tituloPagina = computed(() => {
-  if (route.path.startsWith('/alunos')) return 'Gestao de Alunos'
-  if (route.path.startsWith('/professores')) return 'Gestao de Professores'
   if (route.path.startsWith('/usuarios')) return 'Gestao de Usuarios'
-  if (route.path.startsWith('/diretoria')) return 'Gestao da Diretoria'
   if (route.path.startsWith('/alterar-senha')) return 'Alterar senha'
 
   return 'Escola High Tech'

@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { useNuxtApp } from '#app'
 import type { AlterarSenhaPayload, AuthResponse, EsqueciSenhaPayload, EsqueciSenhaResponse, LoginCredentials, UsuarioSummary } from '~/types/api'
 import { normalizeApiError } from '~/utils/api-client'
+import { canCreateAlunoUsuarios, canManageAllUsuarios, getUsuarioPerfilTipo, isPerfilProfessor } from '~/utils/usuario-permissions'
 
 const STORAGE_KEY = 'form-escola-auth'
 
@@ -23,8 +24,10 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => Boolean(token.value))
   const perfil = computed(() => usuario.value?.descricaoPerfil ?? '')
-  const isAdmin = computed(() => perfil.value === 'Administrador')
-  const canWrite = computed(() => ['Administrador', 'Contribuinte'].includes(perfil.value))
+  const isAdmin = computed(() => canManageAllUsuarios(perfil.value))
+  const isProfessor = computed(() => isPerfilProfessor(perfil.value))
+  const isAluno = computed(() => getUsuarioPerfilTipo(perfil.value) === 'aluno')
+  const canWrite = computed(() => canCreateAlunoUsuarios(perfil.value))
 
   async function login(credentials: LoginCredentials) {
     loading.value = true
@@ -105,6 +108,11 @@ export const useAuthStore = defineStore('auth', () => {
     persist()
   }
 
+  function updateUsuario(value: UsuarioSummary) {
+    usuario.value = value
+    persist()
+  }
+
   function logout() {
     token.value = null
     expiraEm.value = null
@@ -166,12 +174,15 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     perfil,
     isAdmin,
+    isProfessor,
+    isAluno,
     canWrite,
     login,
     fetchMe,
     alterarSenha,
     resetarSenhaPadrao,
     setSession,
+    updateUsuario,
     logout,
     loadFromStorage
   }

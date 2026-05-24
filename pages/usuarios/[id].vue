@@ -4,7 +4,7 @@
       <div>
         <p class="eyebrow">Usuarios</p>
         <h1 class="m-0 text-3xl font-extrabold text-slate-900">
-          {{ editando ? 'Editar usuario' : 'Visualizar usuario' }}
+          {{ tituloPagina }}
         </h1>
       </div>
       <div class="flex flex-wrap gap-2">
@@ -12,7 +12,7 @@
           Voltar
         </NuxtLink>
         <button
-          v-if="auth.isAdmin && !editando"
+          v-if="podeEditar && !editando"
           class="rounded-md bg-[#147f72] px-4 py-2 text-sm font-bold text-white hover:bg-[#0f6c61]"
           type="button"
           @click="editando = true"
@@ -20,7 +20,7 @@
           Editar
         </button>
         <button
-          v-if="auth.isAdmin"
+          v-if="podeExcluir"
           class="rounded-md border border-red-200 px-4 py-2 text-sm font-bold text-red-700 hover:bg-red-50"
           type="button"
           @click="excluir"
@@ -64,11 +64,11 @@
         </label>
 
         <label>
-          <span>Perfil</span>
-          <select v-model.number="form.idPerfil" required :disabled="!editando">
-            <option v-if="!perfis.length" :value="form.idPerfil">{{ usuario?.descricaoPerfil || 'Perfil atual' }}</option>
-            <option v-for="perfil in perfis" :key="perfil.idPerfil" :value="perfil.idPerfil">
-              {{ perfil.descricaoPerfil }}
+          <span>Tipo de usuario</span>
+          <select v-model.number="form.idPerfil" required :disabled="!podeAlterarPerfil">
+            <option v-if="!perfisFormulario.length" :value="form.idPerfil">{{ usuario?.descricaoPerfil || 'Perfil atual' }}</option>
+            <option v-for="perfil in perfisFormulario" :key="perfil.idPerfil" :value="perfil.idPerfil">
+              {{ formatPerfilLabel(perfil.descricaoPerfil) }}
             </option>
           </select>
         </label>
@@ -96,10 +96,18 @@ import {
   isCompleteBrazilPhone,
   normalizeBrazilPhoneForApi
 } from '~/utils/br-phone'
+import {
+  canChangeUsuarioPerfil,
+  canDeleteUsuario,
+  canEditUsuario,
+  canViewUsuarioInList,
+  filterPerfisForUsuarioCreation,
+  formatPerfilLabel
+} from '~/utils/usuario-permissions'
 import { DUPLICATE_USER_EMAIL_MESSAGE, isDuplicateUserEmail } from '~/utils/usuario-validation'
 
 definePageMeta({
-  roles: ['Administrador', 'Contribuinte']
+  roles: []
 })
 
 const { $api } = useNuxtApp()
@@ -114,6 +122,8 @@ const erro = ref('')
 const mensagem = ref('')
 const USER_TEXT_FIELD_MAX_LENGTH = 50
 const PHONE_FORMAT_ERROR = 'Informe um telefone valido no formato +55 (xx) xxxxx-xxxx.'
+const REQUIRED_FIELDS_ERROR = 'Nome, e-mail e telefone sao obrigatorios.'
+const REQUIRED_PROFILE_ERROR = 'Informe o tipo de usuario.'
 const form = reactive<UsuarioUpdate>({
   nome: '',
   email: '',
@@ -122,21 +132,42 @@ const form = reactive<UsuarioUpdate>({
 })
 
 const usuarioId = computed(() => Number(route.params.id))
+const podeEditar = computed(() => usuario.value ? canEditUsuario(auth.usuario, usuario.value) : false)
+const podeExcluir = computed(() => usuario.value ? canDeleteUsuario(auth.usuario) : false)
+const perfisFormulario = computed<Perfil[]>(() => {
+  if (!usuario.value) return []
+
+  if (!canChangeUsuarioPerfil(auth.usuario)) {
+    return [{ idPerfil: usuario.value.idPerfil, descricaoPerfil: usuario.value.descricaoPerfil }]
+  }
+
+  return filterPerfisForUsuarioCreation(perfis.value, auth.usuario)
+})
+const podeAlterarPerfil = computed(() =>
+  editando.value && canChangeUsuarioPerfil(auth.usuario) && perfisFormulario.value.length > 1
+)
+const tituloPagina = computed(() => {
+  if (editando.value) return 'Editar usuario'
+  if (usuario.value?.idUsuario === auth.usuario?.idUsuario) return 'Meu cadastro'
+
+  return 'Visualizar usuario'
+})
 
 onMounted(async () => {
   await carregar()
 
-  if (auth.isAdmin) {
+  if (canChangeUsuarioPerfil(auth.usuario)) {
     try {
-      const [perfisResponse, usuariosResponse] = await Promise.all([
-        $api<Perfil[]>('/usuarios/perfis'),
-        $api<UsuarioSummary[]>('/usuarios')
-      ])
-      perfis.value = perfisResponse
-      usuarios.value = usuariosResponse
+      perfis.value = await $api<Perfil[]>('/usuarios/perfis')
     } catch (err) {
       erro.value = normalizeApiError(err)
     }
+  }
+
+  try {
+    usuarios.value = await $api<UsuarioSummary[]>('/usuarios')
+  } catch {
+    usuarios.value = usuario.value ? [usuario.value] : []
   }
 })
 
@@ -147,7 +178,17 @@ async function carregar() {
     usuario.value = await $api<UsuarioSummary>(`/usuarios/${usuarioId.value}`)
     preencherForm(usuario.value)
   } catch (err) {
-    erro.value = normalizeApiError(err)
+    if (auth.usuario?.idUsuario === usuarioId.value) {
+      usuario.value = auth.usuario
+      preencherForm(auth.usuario)
+    } else {
+      erro.value = normalizeApiError(err)
+      return
+    }
+  }
+
+  if (usuario.value && !canViewUsuarioInList(auth.usuario, usuario.value)) {
+    await navigateTo('/usuarios', { replace: true })
   }
 }
 
@@ -173,19 +214,37 @@ function atualizarTelefone(event: Event) {
 
 function montarPayload(): UsuarioUpdate {
   return {
-    ...form,
-    telefone: normalizeBrazilPhoneForApi(form.telefone)
+    nome: form.nome.trim(),
+    email: form.email.trim(),
+    telefone: normalizeBrazilPhoneForApi(form.telefone),
+    idPerfil: form.idPerfil
   }
+}
+
+function validarFormulario() {
+  if (!form.nome.trim() || !form.email.trim() || !form.telefone.trim()) {
+    erro.value = REQUIRED_FIELDS_ERROR
+    return false
+  }
+
+  if (!isCompleteBrazilPhone(form.telefone)) {
+    erro.value = PHONE_FORMAT_ERROR
+    return false
+  }
+
+  if (!form.idPerfil) {
+    erro.value = REQUIRED_PROFILE_ERROR
+    return false
+  }
+
+  return true
 }
 
 async function salvar() {
   erro.value = ''
   mensagem.value = ''
 
-  if (!isCompleteBrazilPhone(form.telefone)) {
-    erro.value = PHONE_FORMAT_ERROR
-    return
-  }
+  if (!usuario.value || !podeEditar.value || !validarFormulario()) return
 
   if (isDuplicateUserEmail(usuarios.value, form.email, usuarioId.value)) {
     erro.value = DUPLICATE_USER_EMAIL_MESSAGE
@@ -199,6 +258,9 @@ async function salvar() {
       method: 'PUT',
       body: montarPayload()
     })
+    if (usuario.value.idUsuario === auth.usuario?.idUsuario) {
+      auth.updateUsuario(usuario.value)
+    }
     preencherForm(usuario.value)
     mensagem.value = 'Usuario atualizado.'
     editando.value = false
@@ -210,7 +272,7 @@ async function salvar() {
 }
 
 async function excluir() {
-  if (!usuario.value || !confirm(`Excluir o usuario ${usuario.value.nome}?`)) {
+  if (!usuario.value || !podeExcluir.value || !confirm(`Excluir o usuario ${usuario.value.nome}?`)) {
     return
   }
 

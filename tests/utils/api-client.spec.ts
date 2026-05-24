@@ -11,7 +11,7 @@ describe('api-client', () => {
       getToken: () => 'token-123'
     })
 
-    await api('/diretoria')
+    await api('/usuarios')
 
     const options = fetchMock.mock.calls[0][1] as { baseURL: string, headers: Headers }
     expect(options.baseURL).toBe('http://localhost:5001/api')

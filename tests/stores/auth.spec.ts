@@ -86,7 +86,7 @@ describe('auth store', () => {
         email: 'padrao@escola.com',
         telefone: '11999990000',
         idPerfil: 2,
-        descricaoPerfil: 'Contribuinte'
+        descricaoPerfil: 'Professor'
       }
     })
     apiMock.mockResolvedValue({
@@ -95,7 +95,7 @@ describe('auth store', () => {
       email: 'padrao@escola.com',
       telefone: '11999990000',
       idPerfil: 2,
-      descricaoPerfil: 'Contribuinte'
+      descricaoPerfil: 'Professor'
     })
 
     await auth.alterarSenha({

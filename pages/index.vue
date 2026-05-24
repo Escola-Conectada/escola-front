@@ -42,15 +42,12 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowRight, Building2, GraduationCap, ShieldCheck, UserCog, Users } from '@lucide/vue'
+import { ArrowRight, ShieldCheck, UserCog } from '@lucide/vue'
 
 const auth = useAuthStore()
 
 const modulos = computed(() => [
-  { label: 'Diretoria', title: 'Gerenciar diretoria', to: '/diretoria', icon: Building2, show: true },
-  { label: 'Professores', title: 'Gerenciar professores', to: '/professores', icon: GraduationCap, show: true },
-  { label: 'Alunos', title: 'Gerenciar alunos', to: '/alunos', icon: Users, show: true },
-  { label: 'Usuarios', title: 'Gerenciar usuarios', to: '/usuarios', icon: UserCog, show: auth.isAdmin },
+  { label: 'Usuarios', title: auth.isAluno ? 'Corrigir meu cadastro' : 'Gerenciar usuarios', to: '/usuarios', icon: UserCog, show: true },
   { label: 'Seguranca', title: 'Alterar senha', to: '/alterar-senha', icon: ShieldCheck, show: true }
 ].filter((item) => item.show))
 </script>

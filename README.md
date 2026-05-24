@@ -4,12 +4,7 @@ Documentacao tecnica do frontend da aplicacao Escola High Tech. Este README cobr
 
 ## Visao geral
 
-O projeto e uma SPA em Nuxt 3 para gerenciamento escolar. A aplicacao consome uma API REST externa e oferece telas de autenticacao, painel inicial, alteracao de senha e CRUD de:
-
-- Alunos
-- Professores
-- Usuarios
-- Diretoria
+O projeto e uma SPA em Nuxt 3 para gerenciamento escolar. A aplicacao consome uma API REST externa e oferece telas de autenticacao, painel inicial, alteracao de senha e um CRUD unico de usuarios.
 
 O layout atual usa uma identidade visual com fundo claro, cards brancos, destaque laranja para marca/secao, botoes em verde/teal e icones Lucide.
 
@@ -119,18 +114,9 @@ flowchart TD
   S --> P[/ Painel Escola High Tech]
   D -- Nao --> P
 
-  P --> AL[/alunos]
-  P --> PR[/professores]
-  P --> DI[/diretoria]
   P --> US[/usuarios]
   P --> AS[/alterar-senha]
 
-  AL --> ALN[/alunos/novo]
-  AL --> ALD[/alunos/:id]
-  PR --> PRN[/professores/novo]
-  PR --> PRD[/professores/:id]
-  DI --> DIN[/diretoria/novo]
-  DI --> DID[/diretoria/:id]
   US --> USN[/usuarios/novo]
   US --> USD[/usuarios/:id]
 ```
@@ -142,15 +128,6 @@ flowchart TD
 | `/login` | Login e troca obrigatoria da senha padrao apos autenticacao |
 | `/` | Painel com atalhos para os modulos |
 | `/alterar-senha` | Alteracao manual de senha |
-| `/alunos` | CRUD inline de alunos, busca, paginacao e acoes |
-| `/alunos/novo` | Cadastro dedicado de aluno |
-| `/alunos/:id` | Visualizacao, edicao e exclusao de aluno |
-| `/professores` | CRUD inline de professores, busca, paginacao e acoes |
-| `/professores/novo` | Cadastro dedicado de professor |
-| `/professores/:id` | Visualizacao, edicao e exclusao de professor |
-| `/diretoria` | CRUD inline da diretoria, busca, paginacao e acoes |
-| `/diretoria/novo` | Cadastro dedicado de integrante da diretoria |
-| `/diretoria/:id` | Visualizacao, edicao e exclusao de integrante |
 | `/usuarios` | Consulta e CRUD de usuarios conforme perfil |
 | `/usuarios/novo` | Cadastro dedicado de usuario |
 | `/usuarios/:id` | Visualizacao, edicao e exclusao de usuario conforme perfil |
@@ -161,21 +138,18 @@ A sessao autenticada guarda o usuario logado, token JWT, data de expiracao e fla
 
 Os perfis reconhecidos no front sao:
 
-- `Administrador`: acesso completo no front; pode cadastrar, editar e excluir registros.
-- `Contribuinte`: pode acessar modulos operacionais e cadastrar/editar alunos, professores e diretoria. Para usuarios, a tela permite consulta; criacao, edicao e exclusao ficam restritas ao administrador.
-- Outros perfis autenticados: podem acessar rotas gerais sem `roles`, como painel e alteracao de senha. Rotas com `roles` redirecionam para o painel quando o perfil nao e permitido.
+- `Administrador` ou `Membro da Diretoria`: acesso completo ao CRUD de usuarios; pode cadastrar, editar, alterar tipo e excluir usuarios.
+- `Professor`: pode cadastrar usuarios apenas com tipo `Aluno`, consultar usuarios permitidos e corrigir dados de alunos.
+- `Aluno`: pode acessar o proprio cadastro e corrigir nome, e-mail e telefone.
 
 Matriz resumida:
 
-| Area | Administrador | Contribuinte | Outros autenticados |
+| Area | Administrador / Diretoria | Professor | Aluno |
 | --- | --- | --- | --- |
 | Login | Sim | Sim | Sim |
 | Painel | Sim | Sim | Sim |
 | Alterar senha | Sim | Sim | Sim |
-| Alunos | Criar, visualizar, editar, excluir | Criar, visualizar, editar | Restrito por rota/listagem |
-| Professores | Criar, visualizar, editar, excluir | Criar, visualizar, editar | Restrito por rota/listagem |
-| Diretoria | Criar, visualizar, editar, excluir | Criar, visualizar, editar | Restrito por rota/listagem |
-| Usuarios | Criar, visualizar, editar, excluir | Visualizar | Restrito |
+| Usuarios | Criar, visualizar, editar, alterar tipo e excluir | Criar alunos e editar usuarios permitidos | Editar o proprio nome, e-mail e telefone |
 
 Observacao importante: o front controla a experiencia e evita acoes indevidas na UI, mas a API deve continuar sendo a fonte final de autorizacao.
 
@@ -183,7 +157,7 @@ Observacao importante: o front controla a experiencia e evita acoes indevidas na
 
 Arquivos principais:
 
-- `stores/auth.ts`: controla login, logout, persistencia da sessao, perfil, `isAdmin` e `canWrite`.
+- `stores/auth.ts`: controla login, logout, persistencia da sessao e perfil do usuario logado.
 - `middleware/auth.global.ts`: guarda global de rotas.
 - `plugins/api.ts`: injeta `$api` com token JWT e tratamento de `401`.
 - `utils/api-client.ts`: monta headers, normaliza erros e executa chamadas HTTP.
@@ -206,9 +180,6 @@ Endpoints consumidos pelo front:
 | --- | --- |
 | Auth | `POST /auth/login`, `GET /auth/me`, `POST /auth/alterar-senha` |
 | Usuarios | `GET /usuarios`, `GET /usuarios/:id`, `POST /usuarios`, `PUT /usuarios/:id`, `DELETE /usuarios/:id`, `GET /usuarios/perfis` |
-| Alunos | `GET /aluno`, `GET /aluno/:id`, `POST /aluno`, `PUT /aluno/:id`, `DELETE /aluno/:id` |
-| Professores | `GET /professor`, `GET /professor/:id`, `POST /professor`, `PUT /professor/:id`, `DELETE /professor/:id` |
-| Diretoria | `GET /diretoria`, `GET /diretoria/:id`, `POST /diretoria`, `PUT /diretoria/:id`, `DELETE /diretoria/:id` |
 
 Os contratos esperados das respostas ficam em `types/api.ts`.
 
@@ -220,6 +191,8 @@ Nao ha uma biblioteca externa dedicada a validacao de formularios, como Zod, Yup
 - Tipagem TypeScript para contratos de payload e resposta.
 - Utilitario proprio `utils/password-strength.ts` para avaliar forca da senha.
 - Utilitario proprio `utils/usuario-validation.ts` para impedir cadastro/edicao com e-mail ja usado por outro usuario.
+- Utilitario proprio `utils/br-phone.ts` para mascara `+55 (xx) xxxxx-xxxx` e envio do telefone como `+xxxxxxxxxxxxx`.
+- Utilitario proprio `utils/usuario-permissions.ts` para filtrar acoes e tipos de usuario conforme o perfil logado.
 - `normalizeApiError` em `utils/api-client.ts` para exibir mensagens de erro da API, incluindo erros de validacao retornados no formato `{ errors: ... }`.
 
 Regras de forca de senha:
