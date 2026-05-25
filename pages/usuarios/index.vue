@@ -110,9 +110,22 @@
         </button>
       </div>
 
-      <div class="relative mt-5">
-        <Search class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#62728a]" aria-hidden="true" />
-        <input v-model.trim="busca" class="min-h-11 rounded-md border border-[#ccd8e5] pl-12 pr-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10" type="search" placeholder="Consultar usuario" />
+      <div class="mt-5 grid gap-3 md:grid-cols-[minmax(0,1fr)_240px]">
+        <div class="relative">
+          <Search class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#62728a]" aria-hidden="true" />
+          <input v-model.trim="busca" class="min-h-11 rounded-md border border-[#ccd8e5] pl-12 pr-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10" type="search" placeholder="Consultar usuario" />
+        </div>
+
+        <select
+          v-model.number="perfilFiltro"
+          class="min-h-11 rounded-md border border-[#ccd8e5] px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+          aria-label="Filtrar por perfil"
+        >
+          <option :value="0">Todos os perfis</option>
+          <option v-for="perfil in perfisFiltro" :key="perfil.idPerfil" :value="perfil.idPerfil">
+            {{ formatPerfilLabel(perfil.descricaoPerfil) }}
+          </option>
+        </select>
       </div>
 
       <p v-if="erroLista" class="alert alert-error mt-4">{{ erroLista }}</p>
@@ -300,6 +313,7 @@ const erro = ref('')
 const erroLista = ref('')
 const mensagem = ref('')
 const busca = ref('')
+const perfilFiltro = ref(0)
 const pagina = ref(1)
 const porPagina = 10
 const editandoId = ref<number | null>(null)
@@ -317,6 +331,18 @@ const form = reactive<UsuarioCreate>({
 const usuariosVisiveis = computed(() =>
   usuarios.value.filter((usuario) => canViewUsuarioInList(auth.usuario, usuario))
 )
+const perfisFiltro = computed<Perfil[]>(() => {
+  const perfisMap = new Map<number, string>()
+
+  for (const usuario of usuariosVisiveis.value) {
+    if (usuario.idPerfil && usuario.descricaoPerfil) {
+      perfisMap.set(usuario.idPerfil, usuario.descricaoPerfil)
+    }
+  }
+
+  return Array.from(perfisMap, ([idPerfil, descricaoPerfil]) => ({ idPerfil, descricaoPerfil }))
+    .sort((a, b) => formatPerfilLabel(a.descricaoPerfil).localeCompare(formatPerfilLabel(b.descricaoPerfil)))
+})
 const podeCadastrarUsuarios = computed(() => canCreateAlunoUsuarios(auth.perfil))
 const usuarioEmEdicao = computed(() =>
   editandoId.value ? usuarios.value.find((usuario) => usuario.idUsuario === editandoId.value) ?? null : null
@@ -354,10 +380,13 @@ const textoPermissaoConsulta = computed(() => {
 })
 const usuariosFiltrados = computed(() => {
   const termo = busca.value.toLowerCase()
+  const usuariosDoPerfil = perfilFiltro.value
+    ? usuariosVisiveis.value.filter((usuario) => usuario.idPerfil === perfilFiltro.value)
+    : usuariosVisiveis.value
 
-  if (!termo) return usuariosVisiveis.value
+  if (!termo) return usuariosDoPerfil
 
-  return usuariosVisiveis.value.filter((usuario) =>
+  return usuariosDoPerfil.filter((usuario) =>
     [usuario.nome, usuario.email, usuario.telefone, formatBrazilPhone(usuario.telefone), usuario.descricaoPerfil, formatPerfilLabel(usuario.descricaoPerfil)]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(termo))
@@ -378,8 +407,13 @@ const intervaloTexto = computed(() => {
   return `${inicio}-${fim} de ${usuariosFiltrados.value.length} usuario(s)`
 })
 
-watch(busca, () => {
+watch([busca, perfilFiltro], () => {
   pagina.value = 1
+})
+watch(perfisFiltro, (perfisDisponiveis) => {
+  if (perfilFiltro.value && !perfisDisponiveis.some((perfil) => perfil.idPerfil === perfilFiltro.value)) {
+    perfilFiltro.value = 0
+  }
 })
 watch(totalPaginas, (total) => {
   if (pagina.value > total) pagina.value = total
