@@ -74,6 +74,21 @@ export function formatPerfilLabel(descricaoPerfil?: string | null) {
   return descricaoPerfil || 'Perfil'
 }
 
+export function getTipoUsuarioForApi(descricaoPerfil?: string | null) {
+  const tipo = getUsuarioPerfilTipo(descricaoPerfil)
+
+  if (tipo === 'administrador' || tipo === 'diretoria') return 'Administrador'
+  if (tipo === 'professor') return 'Professor'
+  if (tipo === 'aluno') return 'Aluno'
+
+  return ''
+}
+
+export function getTipoUsuarioForApiByPerfilId(perfis: Perfil[], idPerfil: number) {
+  const perfil = perfis.find((item) => item.idPerfil === idPerfil)
+  return getTipoUsuarioForApi(perfil?.descricaoPerfil)
+}
+
 export function filterPerfisForUsuarioCreation(perfis: Perfil[], currentUsuario: UsuarioSummary | null | undefined) {
   if (canManageAllUsuarios(currentUsuario?.descricaoPerfil)) {
     return perfis.filter((perfil) => getUsuarioPerfilTipo(perfil.descricaoPerfil) !== 'desconhecido')

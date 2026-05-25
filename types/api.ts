@@ -5,16 +5,29 @@ export interface UsuarioSummary {
   telefone: string
   idPerfil: number
   descricaoPerfil: string
+  tipoUsuario?: string
 }
 
-export interface UsuarioCreate {
+export interface UsuarioForm {
   nome: string
   email: string
   telefone: string
   idPerfil: number
 }
 
-export type UsuarioUpdate = UsuarioCreate
+export interface UsuarioCreate {
+  nome: string
+  email: string
+  telefone: string
+  tipoUsuario: string
+}
+
+export interface UsuarioUpdate {
+  nome: string
+  email: string
+  telefone: string
+  tipoUsuario?: string
+}
 
 export interface Perfil {
   idPerfil: number

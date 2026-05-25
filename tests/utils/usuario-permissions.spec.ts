@@ -6,6 +6,8 @@ import {
   canViewUsuarioInList,
   filterPerfisForUsuarioCreation,
   formatPerfilLabel,
+  getTipoUsuarioForApi,
+  getTipoUsuarioForApiByPerfilId,
   getUsuarioPerfilTipo
 } from '~/utils/usuario-permissions'
 import type { Perfil, UsuarioSummary } from '~/types/api'
@@ -80,5 +82,12 @@ describe('usuario-permissions', () => {
 
   it('formats admin and board profiles as the requested option label', () => {
     expect(formatPerfilLabel('Administrador')).toBe('Membro da Diretoria / Administrador')
+  })
+
+  it('maps displayed profile descriptions to API user types', () => {
+    expect(getTipoUsuarioForApi('Membro da Diretoria')).toBe('Administrador')
+    expect(getTipoUsuarioForApi('Professor')).toBe('Professor')
+    expect(getTipoUsuarioForApi('Aluno')).toBe('Aluno')
+    expect(getTipoUsuarioForApiByPerfilId(perfis, 2)).toBe('Professor')
   })
 })

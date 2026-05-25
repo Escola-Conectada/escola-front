@@ -87,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Perfil, UsuarioSummary, UsuarioUpdate } from '~/types/api'
+import type { Perfil, UsuarioForm, UsuarioSummary, UsuarioUpdate } from '~/types/api'
 import { normalizeApiError } from '~/utils/api-client'
 import {
   BRAZIL_PHONE_MASK_MAX_LENGTH,
@@ -102,7 +102,8 @@ import {
   canEditUsuario,
   canViewUsuarioInList,
   filterPerfisForUsuarioCreation,
-  formatPerfilLabel
+  formatPerfilLabel,
+  getTipoUsuarioForApiByPerfilId
 } from '~/utils/usuario-permissions'
 import { DUPLICATE_USER_EMAIL_MESSAGE, isDuplicateUserEmail } from '~/utils/usuario-validation'
 
@@ -124,7 +125,7 @@ const USER_TEXT_FIELD_MAX_LENGTH = 50
 const PHONE_FORMAT_ERROR = 'Informe um telefone valido no formato +55 (xx) xxxxx-xxxx.'
 const REQUIRED_FIELDS_ERROR = 'Nome, e-mail e telefone sao obrigatorios.'
 const REQUIRED_PROFILE_ERROR = 'Informe o tipo de usuario.'
-const form = reactive<UsuarioUpdate>({
+const form = reactive<UsuarioForm>({
   nome: '',
   email: '',
   telefone: '',
@@ -213,12 +214,17 @@ function atualizarTelefone(event: Event) {
 }
 
 function montarPayload(): UsuarioUpdate {
-  return {
+  const payload: UsuarioUpdate = {
     nome: form.nome.trim(),
     email: form.email.trim(),
-    telefone: normalizeBrazilPhoneForApi(form.telefone),
-    idPerfil: form.idPerfil
+    telefone: normalizeBrazilPhoneForApi(form.telefone)
   }
+
+  if (canChangeUsuarioPerfil(auth.usuario)) {
+    payload.tipoUsuario = getTipoUsuarioForApiByPerfilId(perfisFormulario.value, form.idPerfil)
+  }
+
+  return payload
 }
 
 function validarFormulario() {
@@ -232,7 +238,7 @@ function validarFormulario() {
     return false
   }
 
-  if (!form.idPerfil) {
+  if (!form.idPerfil || (canChangeUsuarioPerfil(auth.usuario) && !getTipoUsuarioForApiByPerfilId(perfisFormulario.value, form.idPerfil))) {
     erro.value = REQUIRED_PROFILE_ERROR
     return false
   }
