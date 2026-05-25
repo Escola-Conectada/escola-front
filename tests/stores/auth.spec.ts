@@ -74,6 +74,62 @@ describe('auth store', () => {
     expect(localStorage.getItem('form-escola-auth')).toBeNull()
   })
 
+  it('validates a restored session against the API', async () => {
+    const auth = useAuthStore()
+    auth.setSession({
+      token: 'jwt-token',
+      expiraEm: '2026-05-21T22:00:00Z',
+      deveAlterarSenhaPadrao: false,
+      usuario: {
+        idUsuario: 2,
+        nome: 'Usuario Antigo',
+        email: 'antigo@escola.com',
+        telefone: '11999990000',
+        idPerfil: 2,
+        descricaoPerfil: 'Professor'
+      }
+    })
+    apiMock.mockResolvedValue({
+      idUsuario: 2,
+      nome: 'Usuario Atualizado',
+      email: 'atualizado@escola.com',
+      telefone: '11999990000',
+      idPerfil: 2,
+      descricaoPerfil: 'Professor'
+    })
+
+    const usuario = await auth.validateSession()
+
+    expect(apiMock).toHaveBeenCalledWith('/auth/me')
+    expect(usuario?.nome).toBe('Usuario Atualizado')
+    expect(auth.usuario?.email).toBe('atualizado@escola.com')
+  })
+
+  it('clears a restored session when API validation fails', async () => {
+    const auth = useAuthStore()
+    auth.setSession({
+      token: 'jwt-token',
+      expiraEm: '2026-05-21T22:00:00Z',
+      deveAlterarSenhaPadrao: false,
+      usuario: {
+        idUsuario: 999,
+        nome: 'Usuario Removido',
+        email: 'removido@escola.com',
+        telefone: '11999990000',
+        idPerfil: 2,
+        descricaoPerfil: 'Professor'
+      }
+    })
+    apiMock.mockRejectedValue({ response: { status: 401 } })
+
+    const usuario = await auth.validateSession()
+
+    expect(usuario).toBeNull()
+    expect(auth.token).toBeNull()
+    expect(auth.usuario).toBeNull()
+    expect(localStorage.getItem('form-escola-auth')).toBeNull()
+  })
+
   it('changes password and clears the default password flag', async () => {
     const auth = useAuthStore()
     auth.setSession({

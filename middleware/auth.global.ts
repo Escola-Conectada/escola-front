@@ -1,6 +1,14 @@
-export default defineNuxtRouteMiddleware((to) => {
+export default defineNuxtRouteMiddleware(async (to) => {
   const auth = useAuthStore()
   auth.loadFromStorage()
+
+  if (auth.isAuthenticated) {
+    const usuario = await auth.validateSession()
+
+    if (!usuario) {
+      return to.meta.public ? undefined : navigateTo('/login')
+    }
+  }
 
   if (to.meta.public) {
     if (auth.isAuthenticated) {

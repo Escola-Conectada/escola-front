@@ -21,6 +21,7 @@ export const useAuthStore = defineStore('auth', () => {
   const deveAlterarSenhaPadrao = ref(false)
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const sessionValidated = ref(false)
 
   const isAuthenticated = computed(() => Boolean(token.value))
   const perfil = computed(() => usuario.value?.descricaoPerfil ?? '')
@@ -57,8 +58,26 @@ export const useAuthStore = defineStore('auth', () => {
 
     const { $api } = useNuxtApp()
     usuario.value = await $api<UsuarioSummary>('/auth/me')
+    sessionValidated.value = true
     persist()
     return usuario.value
+  }
+
+  async function validateSession() {
+    if (!token.value) {
+      return null
+    }
+
+    if (sessionValidated.value) {
+      return usuario.value
+    }
+
+    try {
+      return await fetchMe()
+    } catch {
+      logout()
+      return null
+    }
   }
 
   async function alterarSenha(payload: AlterarSenhaPayload) {
@@ -105,11 +124,13 @@ export const useAuthStore = defineStore('auth', () => {
     expiraEm.value = session.expiraEm
     usuario.value = session.usuario
     deveAlterarSenhaPadrao.value = Boolean(session.deveAlterarSenhaPadrao)
+    sessionValidated.value = false
     persist()
   }
 
   function updateUsuario(value: UsuarioSummary) {
     usuario.value = value
+    sessionValidated.value = true
     persist()
   }
 
@@ -119,6 +140,7 @@ export const useAuthStore = defineStore('auth', () => {
     usuario.value = null
     deveAlterarSenhaPadrao.value = false
     error.value = null
+    sessionValidated.value = false
 
     if (canUseStorage()) {
       localStorage.removeItem(STORAGE_KEY)
@@ -184,7 +206,8 @@ export const useAuthStore = defineStore('auth', () => {
     setSession,
     updateUsuario,
     logout,
-    loadFromStorage
+    loadFromStorage,
+    validateSession
   }
 })
 
