@@ -223,8 +223,8 @@ async function abrirNotificacao(notificacao: Notificacao) {
   }
 
   try {
-    const updated = await $api<Notificacao>(`/notificacoes/${notificacao.idNotificacao}/ler`, {
-      method: 'PUT'
+    const updated = await $api<Notificacao>(`/notificacoes/${notificacao.idNotificacao}/lida`, {
+      method: 'PATCH'
     })
 
     notificacoes.value = notificacoes.value.map((item) =>
@@ -238,8 +238,8 @@ async function abrirNotificacao(notificacao: Notificacao) {
 
 async function marcarTodasComoLidas() {
   try {
-    await $api<{ quantidade: number }>('/notificacoes/ler-todas', {
-      method: 'PUT'
+    await $api<{ total: number }>('/notificacoes/lidas', {
+      method: 'PATCH'
     })
     notificacoes.value = notificacoes.value.map((notificacao) => ({
       ...notificacao,
