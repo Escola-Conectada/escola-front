@@ -231,13 +231,15 @@
       </p>
 
       <div class="mt-4 hidden max-h-[560px] overflow-auto rounded-lg border border-[#d4dee9] md:block">
-        <table class="min-w-[920px] border-collapse text-left lg:min-w-full">
+        <table class="min-w-[1120px] border-collapse text-left lg:min-w-full">
           <thead class="sticky top-0 bg-[#f5f8fb] text-xs uppercase text-[#51627a]">
             <tr>
               <th class="px-4 py-4">Aluno</th>
               <th class="px-4 py-4">E-mail</th>
               <th class="px-4 py-4">Disciplina</th>
               <th class="px-4 py-4">Notas</th>
+              <th class="px-4 py-4">Media</th>
+              <th class="px-4 py-4">Situacao</th>
               <th class="px-4 py-4">Presencas</th>
               <th class="px-4 py-4">Faltas</th>
               <th v-if="podeAdministrar" class="px-4 py-4 text-center">Acoes</th>
@@ -249,6 +251,12 @@
               <td class="px-4 py-4 text-[#243044]">{{ lancamento.emailAluno }}</td>
               <td class="px-4 py-4 text-[#243044]">{{ lancamento.nomeDisciplina }}</td>
               <td class="px-4 py-4 text-[#243044]">{{ formatNotas(lancamento.notas) }}</td>
+              <td class="px-4 py-4 text-[#243044]">{{ formatarMediaCaderneta(lancamento.notas) }}</td>
+              <td class="px-4 py-4">
+                <span class="font-extrabold" :class="situacaoCadernetaClass(lancamento)">
+                  {{ calcularSituacaoCaderneta(lancamento.notas, lancamento.faltas).label }}
+                </span>
+              </td>
               <td class="px-4 py-4 text-[#243044]">{{ lancamento.presencas }}</td>
               <td class="px-4 py-4 text-[#243044]">{{ lancamento.faltas }}</td>
               <td v-if="podeAdministrar" class="px-4 py-4">
@@ -275,10 +283,10 @@
               </td>
             </tr>
             <tr v-if="!carregando && !lancamentosFiltrados.length">
-              <td class="px-4 py-6 text-[#62728a]" :colspan="podeAdministrar ? 7 : 6">Nenhum registro encontrado.</td>
+              <td class="px-4 py-6 text-[#62728a]" :colspan="podeAdministrar ? 9 : 8">Nenhum registro encontrado.</td>
             </tr>
             <tr v-if="carregando">
-              <td class="px-4 py-6 text-[#62728a]" :colspan="podeAdministrar ? 7 : 6">Carregando caderneta...</td>
+              <td class="px-4 py-6 text-[#62728a]" :colspan="podeAdministrar ? 9 : 8">Carregando caderneta...</td>
             </tr>
           </tbody>
         </table>
@@ -301,6 +309,13 @@
           </div>
           <div class="mt-3 grid gap-2 text-sm text-[#243044]">
             <span><strong>Notas:</strong> {{ formatNotas(lancamento.notas) }}</span>
+            <span><strong>Media:</strong> {{ formatarMediaCaderneta(lancamento.notas) }}</span>
+            <span>
+              <strong>Situacao:</strong>
+              <span class="font-extrabold" :class="situacaoCadernetaClass(lancamento)">
+                {{ calcularSituacaoCaderneta(lancamento.notas, lancamento.faltas).label }}
+              </span>
+            </span>
             <span><strong>Presencas:</strong> {{ lancamento.presencas }}</span>
             <span><strong>Faltas:</strong> {{ lancamento.faltas }}</span>
           </div>
@@ -347,7 +362,13 @@ import type {
   UsuarioSummary
 } from '~/types/api'
 import { normalizeApiError } from '~/utils/api-client'
-import { parseCadernetaNotas, type CadernetaNotaInput } from '~/utils/caderneta-digital'
+import {
+  calcularSituacaoCaderneta,
+  formatarMediaCaderneta,
+  parseCadernetaNotas,
+  type CadernetaNotaInput,
+  type CadernetaSituacaoTipo
+} from '~/utils/caderneta-digital'
 import { isPerfilAluno } from '~/utils/usuario-permissions'
 
 definePageMeta({
@@ -411,7 +432,14 @@ const lancamentosFiltrados = computed(() => {
   if (!termo) return lancamentosDaDisciplina
 
   return lancamentosDaDisciplina.filter((lancamento) =>
-    [lancamento.nomeAluno, lancamento.emailAluno, lancamento.nomeDisciplina, formatNotas(lancamento.notas)]
+    [
+      lancamento.nomeAluno,
+      lancamento.emailAluno,
+      lancamento.nomeDisciplina,
+      formatNotas(lancamento.notas),
+      formatarMediaCaderneta(lancamento.notas),
+      calcularSituacaoCaderneta(lancamento.notas, lancamento.faltas).label
+    ]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(termo))
   )
@@ -639,5 +667,16 @@ function formatNotas(notas: number[]) {
   return notas.length
     ? notas.map((nota) => nota.toLocaleString('pt-BR', { maximumFractionDigits: 1 })).join(' / ')
     : '-'
+}
+
+function situacaoCadernetaClass(lancamento: CadernetaDigitalSummary) {
+  const classes: Record<CadernetaSituacaoTipo, string> = {
+    aprovado: 'text-[#1d4ed8]',
+    recuperacao: 'text-[#111827]',
+    reprovado: 'text-[#dc2626]',
+    'sem-nota': 'text-[#62728a]'
+  }
+
+  return classes[calcularSituacaoCaderneta(lancamento.notas, lancamento.faltas).tipo]
 }
 </script>
