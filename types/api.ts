@@ -81,6 +81,9 @@ export interface CadernetaDigitalSummary {
   idProfessorUsuario: number
   nomeProfessor: string
   notas: number[]
+  mediaAritmetica: number
+  situacao: string
+  corSituacao: string
   presencas: number
   faltas: number
 }

@@ -251,10 +251,10 @@
               <td class="px-4 py-4 text-[#243044]">{{ lancamento.emailAluno }}</td>
               <td class="px-4 py-4 text-[#243044]">{{ lancamento.nomeDisciplina }}</td>
               <td class="px-4 py-4 text-[#243044]">{{ formatNotas(lancamento.notas) }}</td>
-              <td class="px-4 py-4 text-[#243044]">{{ formatarMediaCaderneta(lancamento.notas) }}</td>
+              <td class="px-4 py-4 text-[#243044]">{{ formatarMediaLancamento(lancamento.mediaAritmetica) }}</td>
               <td class="px-4 py-4">
                 <span class="font-extrabold" :class="situacaoCadernetaClass(lancamento)">
-                  {{ calcularSituacaoCaderneta(lancamento.notas, lancamento.faltas).label }}
+                  {{ lancamento.situacao }}
                 </span>
               </td>
               <td class="px-4 py-4 text-[#243044]">{{ lancamento.presencas }}</td>
@@ -309,11 +309,11 @@
           </div>
           <div class="mt-3 grid gap-2 text-sm text-[#243044]">
             <span><strong>Notas:</strong> {{ formatNotas(lancamento.notas) }}</span>
-            <span><strong>Media:</strong> {{ formatarMediaCaderneta(lancamento.notas) }}</span>
+            <span><strong>Media:</strong> {{ formatarMediaLancamento(lancamento.mediaAritmetica) }}</span>
             <span>
               <strong>Situacao:</strong>
               <span class="font-extrabold" :class="situacaoCadernetaClass(lancamento)">
-                {{ calcularSituacaoCaderneta(lancamento.notas, lancamento.faltas).label }}
+                {{ lancamento.situacao }}
               </span>
             </span>
             <span><strong>Presencas:</strong> {{ lancamento.presencas }}</span>
@@ -363,11 +363,8 @@ import type {
 } from '~/types/api'
 import { normalizeApiError } from '~/utils/api-client'
 import {
-  calcularSituacaoCaderneta,
-  formatarMediaCaderneta,
   parseCadernetaNotas,
-  type CadernetaNotaInput,
-  type CadernetaSituacaoTipo
+  type CadernetaNotaInput
 } from '~/utils/caderneta-digital'
 import { isPerfilAluno } from '~/utils/usuario-permissions'
 
@@ -437,8 +434,8 @@ const lancamentosFiltrados = computed(() => {
       lancamento.emailAluno,
       lancamento.nomeDisciplina,
       formatNotas(lancamento.notas),
-      formatarMediaCaderneta(lancamento.notas),
-      calcularSituacaoCaderneta(lancamento.notas, lancamento.faltas).label
+      formatarMediaLancamento(lancamento.mediaAritmetica),
+      lancamento.situacao
     ]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(termo))
@@ -669,14 +666,19 @@ function formatNotas(notas: number[]) {
     : '-'
 }
 
+function formatarMediaLancamento(media: number) {
+  return Number.isFinite(media)
+    ? media.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
+    : '-'
+}
+
 function situacaoCadernetaClass(lancamento: CadernetaDigitalSummary) {
-  const classes: Record<CadernetaSituacaoTipo, string> = {
-    aprovado: 'text-[#1d4ed8]',
-    recuperacao: 'text-[#111827]',
-    reprovado: 'text-[#dc2626]',
-    'sem-nota': 'text-[#62728a]'
+  const classes: Record<string, string> = {
+    azul: 'text-[#1d4ed8]',
+    preto: 'text-[#111827]',
+    vermelho: 'text-[#dc2626]'
   }
 
-  return classes[calcularSituacaoCaderneta(lancamento.notas, lancamento.faltas).tipo]
+  return classes[lancamento.corSituacao] ?? 'text-[#62728a]'
 }
 </script>
