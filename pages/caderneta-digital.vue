@@ -230,66 +230,68 @@
         Nenhuma disciplina associada ao seu cadastro.
       </p>
 
-      <div class="mt-4 hidden max-h-[560px] overflow-auto rounded-lg border border-[#d4dee9] md:block">
-        <table class="min-w-[1120px] border-collapse text-left lg:min-w-full">
-          <thead class="sticky top-0 bg-[#f5f8fb] text-xs uppercase text-[#51627a]">
-            <tr>
-              <th class="px-4 py-4">Aluno</th>
-              <th class="px-4 py-4">E-mail</th>
-              <th class="px-4 py-4">Disciplina</th>
-              <th class="px-4 py-4">Notas</th>
-              <th class="px-4 py-4">Media</th>
-              <th class="px-4 py-4">Situacao</th>
-              <th class="px-4 py-4">Presencas</th>
-              <th class="px-4 py-4">Faltas</th>
-              <th v-if="podeAdministrar" class="px-4 py-4 text-center">Acoes</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="lancamento in lancamentosFiltrados" :key="lancamento.idCadernetaDigital" class="border-t border-[#d4dee9]">
-              <td class="px-4 py-4 font-semibold text-[#243044]">{{ lancamento.nomeAluno }}</td>
-              <td class="px-4 py-4 text-[#243044]">{{ lancamento.emailAluno }}</td>
-              <td class="px-4 py-4 text-[#243044]">{{ lancamento.nomeDisciplina }}</td>
-              <td class="px-4 py-4 text-[#243044]">{{ formatNotas(lancamento.notas) }}</td>
-              <td class="px-4 py-4 text-[#243044]">{{ formatarMediaLancamento(lancamento.mediaAritmetica) }}</td>
-              <td class="px-4 py-4">
-                <span class="font-extrabold" :class="situacaoCadernetaClass(lancamento)">
-                  {{ lancamento.situacao }}
-                </span>
-              </td>
-              <td class="px-4 py-4 text-[#243044]">{{ lancamento.presencas }}</td>
-              <td class="px-4 py-4 text-[#243044]">{{ lancamento.faltas }}</td>
-              <td v-if="podeAdministrar" class="px-4 py-4">
-                <div class="flex justify-center gap-2">
-                  <button
-                    class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
-                    type="button"
-                    title="Editar lancamento"
-                    aria-label="Editar lancamento"
-                    @click="editarLancamento(lancamento)"
-                  >
-                    <Pencil class="h-5 w-5" aria-hidden="true" />
-                  </button>
-                  <button
-                    class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#ffe1e3] text-[#dc2626] transition hover:bg-[#ffd4d7]"
-                    type="button"
-                    title="Excluir lancamento"
-                    aria-label="Excluir lancamento"
-                    @click="excluirLancamento(lancamento)"
-                  >
-                    <Trash2 class="h-5 w-5" aria-hidden="true" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr v-if="!carregando && !lancamentosFiltrados.length">
-              <td class="px-4 py-6 text-[#62728a]" :colspan="podeAdministrar ? 9 : 8">Nenhum registro encontrado.</td>
-            </tr>
-            <tr v-if="carregando">
-              <td class="px-4 py-6 text-[#62728a]" :colspan="podeAdministrar ? 9 : 8">Carregando caderneta...</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="mt-4 hidden max-h-[560px] overflow-y-auto rounded-lg border border-[#d4dee9] md:block">
+        <div
+          class="grid items-center gap-3 bg-[#f5f8fb] px-4 py-3 text-xs font-extrabold uppercase text-[#51627a]"
+          :style="{ gridTemplateColumns: gradeCadernetaTemplate }"
+        >
+          <span>Aluno</span>
+          <span>Disciplina</span>
+          <span>Notas</span>
+          <span>Media</span>
+          <span>Situacao</span>
+          <span>Frequencia</span>
+          <span v-if="podeAdministrar" class="text-center">Acoes</span>
+        </div>
+
+        <article
+          v-for="lancamento in lancamentosFiltrados"
+          :key="lancamento.idCadernetaDigital"
+          class="grid items-center gap-3 border-t border-[#d4dee9] px-4 py-4 text-sm"
+          :style="{ gridTemplateColumns: gradeCadernetaTemplate }"
+        >
+          <div class="min-w-0">
+            <strong class="block truncate text-[#243044]">{{ lancamento.nomeAluno }}</strong>
+            <span class="mt-1 block break-all text-xs font-semibold text-[#51627a]">{{ lancamento.emailAluno }}</span>
+          </div>
+          <span class="min-w-0 break-words font-semibold text-[#243044]">{{ lancamento.nomeDisciplina }}</span>
+          <span class="whitespace-pre-line text-[#243044]">{{ formatNotasQuebradas(lancamento.notas) }}</span>
+          <span class="font-semibold text-[#243044]">{{ formatarMediaLancamento(lancamento.mediaAritmetica) }}</span>
+          <span class="font-extrabold" :class="situacaoCadernetaClass(lancamento)">
+            {{ lancamento.situacao }}
+          </span>
+          <span class="text-[#243044]">
+            <strong>{{ lancamento.presencas }}</strong> presencas<br />
+            <strong>{{ lancamento.faltas }}</strong> faltas
+          </span>
+          <div v-if="podeAdministrar" class="flex justify-center gap-2">
+            <button
+              class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
+              type="button"
+              title="Editar lancamento"
+              aria-label="Editar lancamento"
+              @click="editarLancamento(lancamento)"
+            >
+              <Pencil class="h-5 w-5" aria-hidden="true" />
+            </button>
+            <button
+              class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#ffe1e3] text-[#dc2626] transition hover:bg-[#ffd4d7]"
+              type="button"
+              title="Excluir lancamento"
+              aria-label="Excluir lancamento"
+              @click="excluirLancamento(lancamento)"
+            >
+              <Trash2 class="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
+        </article>
+
+        <p v-if="!carregando && !lancamentosFiltrados.length" class="m-0 border-t border-[#d4dee9] px-4 py-6 text-[#62728a]">
+          Nenhum registro encontrado.
+        </p>
+        <p v-if="carregando" class="m-0 border-t border-[#d4dee9] px-4 py-6 text-[#62728a]">
+          Carregando caderneta...
+        </p>
       </div>
 
       <div class="mt-4 grid gap-3 md:hidden">
@@ -403,6 +405,11 @@ const lancamentoForm = reactive({
 })
 
 const podeAdministrar = computed(() => auth.isProfessor)
+const gradeCadernetaTemplate = computed(() =>
+  podeAdministrar.value
+    ? 'minmax(120px, 1.35fr) minmax(86px, 0.75fr) minmax(58px, 0.55fr) minmax(52px, 0.42fr) minmax(88px, 0.7fr) minmax(82px, 0.62fr) 88px'
+    : 'minmax(120px, 1.4fr) minmax(86px, 0.8fr) minmax(58px, 0.55fr) minmax(52px, 0.42fr) minmax(88px, 0.72fr) minmax(82px, 0.62fr)'
+)
 const alunosDisponiveis = computed(() =>
   usuarios.value.filter((usuario) => isPerfilAluno(usuario.descricaoPerfil))
 )
@@ -663,6 +670,12 @@ function removerEventoNativoLancamento() {
 function formatNotas(notas: number[]) {
   return notas.length
     ? notas.map((nota) => nota.toLocaleString('pt-BR', { maximumFractionDigits: 1 })).join(' / ')
+    : '-'
+}
+
+function formatNotasQuebradas(notas: number[]) {
+  return notas.length
+    ? notas.map((nota) => nota.toLocaleString('pt-BR', { maximumFractionDigits: 1 })).join('\n')
     : '-'
 }
 
