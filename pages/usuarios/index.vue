@@ -86,7 +86,7 @@
             />
           </label>
           <button
-            class="inline-flex min-h-11 w-full max-w-full items-center justify-center gap-2 rounded-md bg-[#147f72] px-4 text-sm font-extrabold text-white transition hover:bg-[#0f6c61] disabled:cursor-wait disabled:opacity-70"
+            class="inline-flex min-h-11 w-full max-w-full items-center justify-center gap-2 rounded-md bg-[#147f72] px-4 text-sm font-extrabold text-white transition hover:bg-[#0f6c61] disabled:cursor-not-allowed disabled:opacity-70"
             type="button"
             :disabled="!fotoSelecionada || enviandoFoto"
             @click="enviarFoto"
@@ -107,7 +107,7 @@
               />
             </label>
             <button
-              class="inline-flex min-h-11 w-full max-w-full items-center justify-center gap-2 rounded-md bg-[#147f72] px-4 text-sm font-extrabold text-white transition hover:bg-[#0f6c61] disabled:cursor-wait disabled:opacity-70"
+              class="inline-flex min-h-11 w-full max-w-full items-center justify-center gap-2 rounded-md bg-[#147f72] px-4 text-sm font-extrabold text-white transition hover:bg-[#0f6c61] disabled:cursor-not-allowed disabled:opacity-70"
               type="button"
               :disabled="!certificadoSelecionado || enviandoCertificado"
               @click="enviarCertificado"
@@ -122,15 +122,15 @@
                 :key="obterArquivoId(arquivo)"
                 class="flex min-w-0 items-center justify-between gap-3 rounded-md border border-[#d4dee9] bg-white p-3"
               >
-                <a
-                  class="inline-flex min-w-0 items-center gap-2 text-sm font-extrabold text-[#071d3b] no-underline hover:text-[#147f72]"
-                  :href="resolverArquivoUrl(arquivo.url)"
-                  target="_blank"
-                  rel="noreferrer"
+                <button
+                  class="inline-flex min-w-0 items-center gap-2 border-0 bg-transparent p-0 text-left text-sm font-extrabold text-[#071d3b] transition hover:text-[#147f72] disabled:cursor-wait disabled:opacity-70"
+                  type="button"
+                  :disabled="arquivoBaixandoId === obterArquivoId(arquivo)"
+                  @click="baixarArquivoUsuario(editandoId, arquivo)"
                 >
                   <FileText class="h-5 w-5 shrink-0" aria-hidden="true" />
                   <span class="truncate">{{ arquivo.nomeOriginal }}</span>
-                </a>
+                </button>
                 <button
                   class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#ffe1e3] text-[#dc2626] transition hover:bg-[#ffd4d7]"
                   type="button"
@@ -162,7 +162,7 @@
               />
             </label>
             <button
-              class="inline-flex min-h-11 w-full max-w-full items-center justify-center gap-2 rounded-md bg-[#147f72] px-4 text-sm font-extrabold text-white transition hover:bg-[#0f6c61] disabled:cursor-wait disabled:opacity-70"
+              class="inline-flex min-h-11 w-full max-w-full items-center justify-center gap-2 rounded-md bg-[#147f72] px-4 text-sm font-extrabold text-white transition hover:bg-[#0f6c61] disabled:cursor-not-allowed disabled:opacity-70"
               type="button"
               :disabled="enviandoNotificacao"
               @click="enviarNotificacao"
@@ -185,7 +185,7 @@
 
         <div class="grid gap-2">
           <button
-            class="inline-flex min-h-12 w-full max-w-full items-center justify-center gap-2 rounded-md bg-[#147f72] px-4 text-sm font-extrabold text-white transition hover:bg-[#0f6c61] disabled:cursor-wait disabled:opacity-70"
+            class="inline-flex min-h-12 w-full max-w-full items-center justify-center gap-2 rounded-md bg-[#147f72] px-4 text-sm font-extrabold text-white transition hover:bg-[#0f6c61] disabled:cursor-not-allowed disabled:opacity-70"
             type="submit"
             :disabled="salvando"
           >
@@ -270,9 +270,9 @@
                 <div class="flex min-w-0 items-center gap-3">
                   <div class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#edf3f8] text-xs font-extrabold text-[#071d3b]">
                     <img
-                      v-if="usuario.fotoPerfilUrl"
+                      v-if="fotoUsuarioListaUrl(usuario)"
                       class="h-full w-full object-cover"
-                      :src="resolverArquivoUrl(usuario.fotoPerfilUrl)"
+                      :src="fotoUsuarioListaUrl(usuario)"
                       :alt="`Foto de ${usuario.nome}`"
                     />
                     <span v-else>{{ obterIniciais(usuario.nome) }}</span>
@@ -351,9 +351,9 @@
             <div class="flex min-w-0 items-start gap-3">
               <div class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#edf3f8] text-xs font-extrabold text-[#071d3b]">
                 <img
-                  v-if="usuario.fotoPerfilUrl"
+                  v-if="fotoUsuarioListaUrl(usuario)"
                   class="h-full w-full object-cover"
-                  :src="resolverArquivoUrl(usuario.fotoPerfilUrl)"
+                  :src="fotoUsuarioListaUrl(usuario)"
                   :alt="`Foto de ${usuario.nome}`"
                 />
                 <span v-else>{{ obterIniciais(usuario.nome) }}</span>
@@ -469,24 +469,23 @@
         </div>
 
         <div class="grid gap-2">
-          <a
+          <button
             v-for="arquivo in arquivosPopup"
             :key="obterArquivoId(arquivo)"
-            class="flex min-w-0 items-center justify-between gap-3 rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-3 text-[#071d3b] no-underline transition hover:border-[#147f72]"
-            :href="resolverArquivoUrl(arquivo.url)"
-            target="_blank"
-            rel="noreferrer"
-            download
+            class="flex min-w-0 items-center justify-between gap-3 rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-3 text-left text-[#071d3b] transition hover:border-[#147f72] disabled:cursor-wait disabled:opacity-70"
+            type="button"
+            :disabled="arquivoBaixandoId === obterArquivoId(arquivo)"
+            @click="baixarArquivoProfessor(arquivo)"
           >
             <span class="inline-flex min-w-0 items-center gap-2">
               <FileText class="h-5 w-5 shrink-0" aria-hidden="true" />
               <span class="truncate text-sm font-extrabold">{{ arquivo.nomeOriginal || 'Certificado PDF' }}</span>
             </span>
             <span class="inline-flex shrink-0 items-center gap-2 text-xs font-extrabold text-[#62728a]">
-              {{ formatarTamanhoArquivo(arquivo.tamanhoBytes) }}
+              {{ arquivoBaixandoId === obterArquivoId(arquivo) ? 'Baixando...' : formatarTamanhoArquivo(arquivo.tamanhoBytes) }}
               <Download class="h-4 w-4" aria-hidden="true" />
             </span>
-          </a>
+          </button>
         </div>
 
         <p v-if="!arquivosPopup.length" class="m-0 rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-3 text-sm font-semibold text-[#62728a]">
@@ -501,7 +500,7 @@
 import { Camera, ChevronLeft, ChevronRight, Download, Eye, FileText, Pencil, Plus, RefreshCcw, Search, Send, Trash2, Upload, X } from '@lucide/vue'
 import type { Perfil, UsuarioArquivo, UsuarioCreate, UsuarioForm, UsuarioSummary, UsuarioUpdate } from '~/types/api'
 import { normalizeApiError } from '~/utils/api-client'
-import { resolveApiAssetUrl } from '~/utils/api-url'
+import { downloadBlob, fetchApiBlob } from '~/utils/api-file'
 import {
   BRAZIL_PHONE_MASK_MAX_LENGTH,
   BRAZIL_PHONE_PLACEHOLDER,
@@ -536,6 +535,7 @@ const usuarios = ref<UsuarioSummary[]>([])
 const perfis = ref<Perfil[]>([])
 const arquivosUsuario = ref<UsuarioArquivo[]>([])
 const arquivosPorUsuario = ref<Record<number, UsuarioArquivo[]>>({})
+const fotosPorUsuario = ref<Record<number, string>>({})
 const usuarioArquivosPopup = ref<UsuarioSummary | null>(null)
 const carregando = ref(false)
 const salvando = ref(false)
@@ -544,6 +544,7 @@ const carregandoArquivosLista = ref(false)
 const enviandoFoto = ref(false)
 const enviandoCertificado = ref(false)
 const enviandoNotificacao = ref(false)
+const arquivoBaixandoId = ref(0)
 const erro = ref('')
 const erroLista = ref('')
 const erroArquivos = ref('')
@@ -594,7 +595,7 @@ const usuarioEmEdicao = computed(() =>
   editandoId.value ? usuarios.value.find((usuario) => usuario.idUsuario === editandoId.value) ?? null : null
 )
 const fotoUsuarioEmEdicao = computed(() =>
-  fotoPreviewUrl.value || resolveApiAssetUrl(usuarioEmEdicao.value?.fotoPerfilUrl, config.public.apiBase)
+  fotoPreviewUrl.value || (usuarioEmEdicao.value ? fotoUsuarioListaUrl(usuarioEmEdicao.value) : '')
 )
 const certificadosUsuario = computed(() =>
   arquivosUsuario.value.filter((arquivo) => arquivo.tipoArquivo?.toLowerCase() === 'certificado')
@@ -699,6 +700,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   limparFotoPreview()
+  limparFotosUsuarios()
 })
 
 async function carregar() {
@@ -722,7 +724,10 @@ async function carregar() {
     carregando.value = false
   }
 
-  await carregarArquivosProfessores()
+  await Promise.all([
+    carregarArquivosProfessores(),
+    carregarFotosUsuarios()
+  ])
 }
 
 async function carregarPerfis() {
@@ -777,6 +782,69 @@ async function carregarArquivosProfessores() {
   } finally {
     carregandoArquivosLista.value = false
   }
+}
+
+async function carregarFotosUsuarios() {
+  limparFotosUsuarios()
+
+  const usuariosComFoto = usuariosVisiveis.value.filter((usuario) => usuario.fotoPerfilUrl)
+  if (!usuariosComFoto.length) {
+    return
+  }
+
+  const resultados = await Promise.all(usuariosComFoto.map(async (usuario) => {
+    try {
+      const blob = await fetchApiBlob(`/usuarios/${usuario.idUsuario}/foto`, config.public.apiBase, auth.token)
+      return [usuario.idUsuario, URL.createObjectURL(blob)] as const
+    } catch {
+      return [usuario.idUsuario, ''] as const
+    }
+  }))
+
+  fotosPorUsuario.value = Object.fromEntries(resultados.filter(([, url]) => Boolean(url)))
+}
+
+async function carregarFotoUsuarioLista(idUsuario: number) {
+  const usuario = usuarios.value.find((item) => item.idUsuario === idUsuario)
+  limparFotoUsuarioLista(idUsuario)
+
+  if (!usuario?.fotoPerfilUrl) {
+    return
+  }
+
+  try {
+    const blob = await fetchApiBlob(`/usuarios/${idUsuario}/foto`, config.public.apiBase, auth.token)
+    fotosPorUsuario.value = {
+      ...fotosPorUsuario.value,
+      [idUsuario]: URL.createObjectURL(blob)
+    }
+  } catch {
+    fotosPorUsuario.value = {
+      ...fotosPorUsuario.value,
+      [idUsuario]: ''
+    }
+  }
+}
+
+function limparFotoUsuarioLista(idUsuario: number) {
+  const currentUrl = fotosPorUsuario.value[idUsuario]
+  if (currentUrl) {
+    URL.revokeObjectURL(currentUrl)
+  }
+
+  const { [idUsuario]: _removida, ...restantes } = fotosPorUsuario.value
+  fotosPorUsuario.value = restantes
+}
+
+function limparFotosUsuarios() {
+  Object.values(fotosPorUsuario.value).forEach((url) => {
+    if (url) URL.revokeObjectURL(url)
+  })
+  fotosPorUsuario.value = {}
+}
+
+function fotoUsuarioListaUrl(usuario: UsuarioSummary) {
+  return fotosPorUsuario.value[usuario.idUsuario] || ''
 }
 
 function obterApenasCertificados(arquivos: UsuarioArquivo[]) {
@@ -1026,11 +1094,36 @@ async function enviarFoto() {
     fotoSelecionada.value = null
     limparFotoPreview()
     limparInputArquivo(fotoInputRef.value)
+    await carregarFotoUsuarioLista(updated.idUsuario)
     mensagemArquivos.value = 'Foto atualizada.'
   } catch (err) {
     erroArquivos.value = normalizeApiError(err)
   } finally {
     enviandoFoto.value = false
+  }
+}
+
+async function baixarArquivoProfessor(arquivo: UsuarioArquivo) {
+  await baixarArquivoUsuario(usuarioArquivosPopup.value?.idUsuario, arquivo)
+}
+
+async function baixarArquivoUsuario(idUsuario: number | null | undefined, arquivo: UsuarioArquivo) {
+  const arquivoId = obterArquivoId(arquivo)
+  if (!idUsuario || !arquivoId) {
+    erroLista.value = 'Arquivo sem identificador para download.'
+    return
+  }
+
+  arquivoBaixandoId.value = arquivoId
+  erroLista.value = ''
+
+  try {
+    const blob = await fetchApiBlob(`/usuarios/${idUsuario}/arquivos/${arquivoId}/download`, config.public.apiBase, auth.token)
+    downloadBlob(blob, arquivo.nomeOriginal || 'certificado.pdf')
+  } catch (err) {
+    erroLista.value = normalizeApiError(err)
+  } finally {
+    arquivoBaixandoId.value = 0
   }
 }
 
@@ -1149,10 +1242,6 @@ async function excluir(usuario: UsuarioSummary) {
   } catch (err) {
     erroLista.value = normalizeApiError(err)
   }
-}
-
-function resolverArquivoUrl(url?: string | null) {
-  return resolveApiAssetUrl(url, config.public.apiBase)
 }
 
 function formatarTamanhoArquivo(tamanhoBytes?: number | null) {

@@ -119,18 +119,18 @@
               :key="obterArquivoId(arquivo)"
               class="flex min-w-0 items-center justify-between gap-3 rounded-md border border-[#d4dee9] bg-white p-3"
             >
-              <a
-                class="inline-flex min-w-0 items-center gap-2 text-sm font-extrabold text-[#071d3b] no-underline hover:text-[#147f72]"
-                :href="resolverArquivoUrl(arquivo.url)"
-                target="_blank"
-                rel="noreferrer"
+              <button
+                class="inline-flex min-w-0 items-center gap-2 border-0 bg-transparent p-0 text-left text-sm font-extrabold text-[#071d3b] transition hover:text-[#147f72] disabled:cursor-wait disabled:opacity-70"
+                type="button"
+                :disabled="arquivoBaixandoId === obterArquivoId(arquivo)"
+                @click="baixarArquivo(arquivo)"
               >
                 <FileText class="h-5 w-5 shrink-0" aria-hidden="true" />
                 <span class="truncate">{{ arquivo.nomeOriginal || 'Certificado' }}</span>
-              </a>
+              </button>
               <button
                 v-if="podeExcluirArquivo"
-                class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#ffe1e3] text-[#dc2626] transition hover:bg-[#ffd4d7] disabled:cursor-wait disabled:opacity-70"
+                class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#ffe1e3] text-[#dc2626] transition hover:bg-[#ffd4d7] disabled:cursor-not-allowed disabled:opacity-70"
                 type="button"
                 title="Excluir certificado"
                 aria-label="Excluir certificado"
@@ -224,7 +224,7 @@
 import { ArrowLeft, Camera, FileText, Pencil, Save, Trash2, Upload, XCircle } from '@lucide/vue'
 import type { Perfil, UsuarioArquivo, UsuarioForm, UsuarioSummary, UsuarioUpdate } from '~/types/api'
 import { normalizeApiError } from '~/utils/api-client'
-import { resolveApiAssetUrl } from '~/utils/api-url'
+import { downloadBlob, fetchApiBlob } from '~/utils/api-file'
 import {
   BRAZIL_PHONE_MASK_MAX_LENGTH,
   BRAZIL_PHONE_PLACEHOLDER,
@@ -264,6 +264,7 @@ const carregandoArquivos = ref(false)
 const enviandoFoto = ref(false)
 const enviandoCertificado = ref(false)
 const arquivoExcluindoId = ref(0)
+const arquivoBaixandoId = ref(0)
 const erro = ref('')
 const mensagem = ref('')
 const erroArquivos = ref('')
@@ -273,6 +274,7 @@ const certificadoInputRef = ref<HTMLInputElement | null>(null)
 const fotoSelecionada = ref<File | null>(null)
 const certificadoSelecionado = ref<File | null>(null)
 const fotoPreviewUrl = ref('')
+const fotoArquivoUrl = ref('')
 const USER_TEXT_FIELD_MAX_LENGTH = 50
 const PHONE_FORMAT_ERROR = 'Informe um telefone valido no formato +55 (xx) xxxxx-xxxx.'
 const REQUIRED_FIELDS_ERROR = 'Nome, e-mail e telefone sao obrigatorios.'
@@ -288,7 +290,7 @@ const usuarioId = computed(() => Number(route.params.id))
 const podeEditar = computed(() => usuario.value ? canEditUsuario(auth.usuario, usuario.value) : false)
 const podeExcluir = computed(() => usuario.value ? canDeleteUsuario(auth.usuario) : false)
 const fotoUsuarioUrl = computed(() =>
-  fotoPreviewUrl.value || resolveApiAssetUrl(usuario.value?.fotoPerfilUrl, config.public.apiBase)
+  fotoPreviewUrl.value || fotoArquivoUrl.value
 )
 const certificadosUsuario = computed(() =>
   arquivosUsuario.value.filter((arquivo) => arquivo.tipoArquivo?.toLowerCase() === 'certificado')
@@ -348,6 +350,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   limparFotoPreview()
+  limparFotoArquivo()
 })
 
 async function carregar() {
@@ -370,6 +373,8 @@ async function carregar() {
     await navigateTo('/usuarios', { replace: true })
     return
   }
+
+  await carregarFotoUsuario()
 
   if (podeConsultarArquivos.value) {
     await carregarArquivos()
@@ -462,6 +467,28 @@ function limparFotoPreview() {
   }
 }
 
+function limparFotoArquivo() {
+  if (fotoArquivoUrl.value) {
+    URL.revokeObjectURL(fotoArquivoUrl.value)
+    fotoArquivoUrl.value = ''
+  }
+}
+
+async function carregarFotoUsuario() {
+  limparFotoArquivo()
+
+  if (!usuario.value?.fotoPerfilUrl) {
+    return
+  }
+
+  try {
+    const blob = await fetchApiBlob(`/usuarios/${usuarioId.value}/foto`, config.public.apiBase, auth.token)
+    fotoArquivoUrl.value = URL.createObjectURL(blob)
+  } catch {
+    fotoArquivoUrl.value = ''
+  }
+}
+
 async function enviarFoto() {
   if (!usuario.value || !podeEnviarFoto.value || !fotoSelecionada.value) {
     erroArquivos.value = 'Selecione uma foto para enviar.'
@@ -489,11 +516,32 @@ async function enviarFoto() {
     fotoSelecionada.value = null
     limparFotoPreview()
     limparInputArquivo(fotoInputRef.value)
+    await carregarFotoUsuario()
     mensagemArquivos.value = 'Foto atualizada.'
   } catch (err) {
     erroArquivos.value = normalizeApiError(err)
   } finally {
     enviandoFoto.value = false
+  }
+}
+
+async function baixarArquivo(arquivo: UsuarioArquivo) {
+  const arquivoId = obterArquivoId(arquivo)
+  if (!arquivoId) {
+    erroArquivos.value = 'Arquivo sem identificador para download.'
+    return
+  }
+
+  arquivoBaixandoId.value = arquivoId
+  erroArquivos.value = ''
+
+  try {
+    const blob = await fetchApiBlob(`/usuarios/${usuarioId.value}/arquivos/${arquivoId}/download`, config.public.apiBase, auth.token)
+    downloadBlob(blob, arquivo.nomeOriginal || 'certificado.pdf')
+  } catch (err) {
+    erroArquivos.value = normalizeApiError(err)
+  } finally {
+    arquivoBaixandoId.value = 0
   }
 }
 
@@ -670,10 +718,6 @@ async function excluir() {
   } catch (err) {
     erro.value = normalizeApiError(err)
   }
-}
-
-function resolverArquivoUrl(url?: string | null) {
-  return resolveApiAssetUrl(url, config.public.apiBase)
 }
 
 function obterArquivoId(arquivo: UsuarioArquivo) {
