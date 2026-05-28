@@ -42,13 +42,14 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowRight, BookOpen, ShieldCheck, UserCog } from '@lucide/vue'
+import { ArrowRight, BookOpen, QrCode, ShieldCheck, UserCog } from '@lucide/vue'
 
 const auth = useAuthStore()
 
 const modulos = computed(() => [
   { label: 'Usuarios', title: auth.isAluno ? 'Corrigir meu cadastro' : 'Gerenciar usuarios', to: '/usuarios', icon: UserCog, show: true },
   { label: 'Caderneta Digital', title: auth.isProfessor ? 'Administrar notas e frequencia' : 'Visualizar boletim e frequencia', to: '/caderneta-digital', icon: BookOpen, show: true },
+  { label: 'QR Code', title: 'Gerar dados bancarios ficticios', to: '/qr-code-bancario', icon: QrCode, show: true },
   { label: 'Seguranca', title: 'Alterar senha', to: '/alterar-senha', icon: ShieldCheck, show: true }
 ].filter((item) => item.show))
 </script>
