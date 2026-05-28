@@ -70,7 +70,7 @@
                     <strong class="min-w-0 break-words text-sm text-[#071d3b]">{{ notificacao.titulo }}</strong>
                     <span v-if="!notificacao.lida" class="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#d64200]" />
                   </span>
-                  <span class="line-clamp-2 text-sm font-semibold text-[#51627a]">{{ notificacao.mensagem }}</span>
+                  <span class="line-clamp-2 break-words text-sm font-semibold text-[#51627a] [overflow-wrap:anywhere]">{{ notificacao.mensagem }}</span>
                   <span class="text-xs font-extrabold text-[#7a8798]">{{ formatarDataNotificacao(notificacao.criadaEmUtc) }}</span>
                 </button>
 
@@ -111,11 +111,11 @@
       class="fixed inset-0 z-40 grid place-items-center bg-[#071d3b]/50 px-4 py-6"
       @click.self="fecharNotificacao"
     >
-      <article class="grid max-h-[90vh] w-full max-w-lg gap-4 overflow-auto rounded-lg bg-white p-5 shadow-[0_22px_55px_rgba(14,30,53,0.24)]">
+      <article class="grid max-h-[90vh] w-full max-w-lg min-w-0 gap-4 overflow-y-auto overflow-x-hidden rounded-lg bg-white p-5 shadow-[0_22px_55px_rgba(14,30,53,0.24)]">
         <div class="flex items-start justify-between gap-4">
           <div class="min-w-0">
-            <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">{{ notificacaoSelecionada.tipo || 'Notificacao' }}</p>
-            <h2 class="m-0 mt-1 break-words text-xl font-normal text-[#071d3b]">{{ notificacaoSelecionada.titulo }}</h2>
+            <p class="m-0 break-words text-xs font-extrabold uppercase text-[#d64200] [overflow-wrap:anywhere]">{{ formatarTipoNotificacao(notificacaoSelecionada.tipo) }}</p>
+            <h2 class="m-0 mt-1 break-words text-xl font-normal text-[#071d3b] [overflow-wrap:anywhere]">{{ notificacaoSelecionada.titulo }}</h2>
           </div>
           <button
             class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
@@ -128,7 +128,7 @@
           </button>
         </div>
 
-        <p class="m-0 whitespace-pre-wrap break-words text-sm font-semibold leading-6 text-[#243044]">
+        <p class="m-0 min-w-0 whitespace-pre-wrap break-words text-sm font-semibold leading-6 text-[#243044] [overflow-wrap:anywhere]">
           {{ notificacaoSelecionada.mensagem }}
         </p>
         <p class="m-0 text-xs font-extrabold text-[#7a8798]">
@@ -254,6 +254,35 @@ async function marcarTodasComoLidas() {
 
 function fecharNotificacao() {
   notificacaoSelecionada.value = null
+}
+
+function formatarTipoNotificacao(value?: string | null) {
+  if (!value) return 'Notificacao'
+
+  const key = value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]/g, '')
+    .toUpperCase()
+  const labels: Record<string, string> = {
+    DADOSUSUARIOATUALIZADOS: 'Dados usuario atualizados',
+    ARQUIVOUSUARIOATUALIZADO: 'Arquivo usuario atualizado',
+    ARQUIVOUSUARIOATUALIZADOS: 'Arquivos usuario atualizados',
+    CERTIFICADOADICIONADO: 'Certificado adicionado',
+    CERTIFICADOUSUARIOADICIONADO: 'Certificado usuario adicionado',
+    CERTIFICADOUSUARIOATUALIZADO: 'Certificado usuario atualizado'
+  }
+
+  if (labels[key]) {
+    return labels[key]
+  }
+
+  return value
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 function formatarDataNotificacao(value: string) {

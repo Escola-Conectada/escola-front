@@ -507,11 +507,11 @@
       class="fixed inset-0 z-40 grid place-items-center bg-[#071d3b]/50 px-4 py-6"
       @click.self="fecharArquivosProfessor"
     >
-      <article class="grid max-h-[90vh] w-full max-w-lg gap-4 overflow-auto rounded-lg bg-white p-5 shadow-[0_22px_55px_rgba(14,30,53,0.24)]">
+      <article class="grid max-h-[90vh] w-full max-w-lg min-w-0 gap-4 overflow-y-auto overflow-x-hidden rounded-lg bg-white p-5 shadow-[0_22px_55px_rgba(14,30,53,0.24)]">
         <div class="flex items-start justify-between gap-4">
           <div class="min-w-0">
             <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Documentos</p>
-            <h2 class="m-0 mt-1 break-words text-xl font-normal text-[#071d3b]">{{ usuarioArquivosPopup.nome }}</h2>
+            <h2 class="m-0 mt-1 break-words text-xl font-normal text-[#071d3b] [overflow-wrap:anywhere]">{{ usuarioArquivosPopup.nome }}</h2>
           </div>
           <button
             class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
@@ -535,7 +535,7 @@
           >
             <span class="inline-flex min-w-0 items-center gap-2">
               <FileText class="h-5 w-5 shrink-0" aria-hidden="true" />
-              <span class="truncate text-sm font-extrabold">{{ arquivo.nomeOriginal || 'Certificado PDF' }}</span>
+              <span class="truncate text-sm font-extrabold [overflow-wrap:anywhere]">{{ arquivo.nomeOriginal || 'Certificado PDF' }}</span>
             </span>
             <span class="inline-flex shrink-0 items-center gap-2 text-xs font-extrabold text-[#62728a]">
               {{ arquivoBaixandoId === obterArquivoId(arquivo) ? 'Baixando...' : formatarTamanhoArquivo(arquivo.tamanhoBytes) }}
