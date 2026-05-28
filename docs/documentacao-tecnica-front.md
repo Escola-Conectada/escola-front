@@ -9,6 +9,8 @@ Este documento descreve a arquitetura, os modulos, os contratos e os pontos de m
 
 O frontend e uma SPA Nuxt 3 que consome uma API REST externa. Ele controla a experiencia de usuario, roteamento, autenticacao no navegador, validacoes locais, permissoes visuais e integracoes de tela. A API continua sendo a fonte final de dados, autorizacao e persistencia.
 
+As funcionalidades ficticias atuais sao QR Code bancario para alunos e holerite demonstrativo para funcionarios. Ambas sao geradas localmente no front e nao possuem valor oficial.
+
 ## 2. Stack tecnica
 
 | Tecnologia | Responsabilidade |
@@ -52,6 +54,8 @@ components/                      # Componentes reutilizaveis
 docs/                            # Documentacao tecnica
 layouts/                         # Layouts default e auth
 middleware/auth.global.ts        # Middleware global de autenticacao
+middleware/aluno.ts              # Restricao para rotas exclusivas de alunos
+middleware/funcionario.ts        # Restricao para rotas exclusivas de funcionarios
 pages/                           # Rotas Nuxt
 plugins/api.ts                   # Plugin que injeta $api
 stores/auth.ts                   # Store de autenticacao
@@ -124,7 +128,8 @@ Exibe atalhos para:
 - Usuarios.
 - Caderneta Digital.
 - Calendario Escolar.
-- QR Code.
+- QR Code, somente para aluno.
+- Holerite, somente para perfis nao alunos.
 - Alterar senha.
 
 ### 7.3 Usuarios
@@ -187,10 +192,12 @@ Rota: `/qr-code-bancario`.
 Arquivos:
 
 - `pages/qr-code-bancario.vue`
+- `middleware/aluno.ts`
 - `utils/qr-code-bancario.ts`
 
 Funcionalidades:
 
+- Disponivel somente para alunos.
 - Gera dados bancarios demonstrativos por aluno.
 - Gera QR Code localmente.
 - Compartilha texto por WhatsApp.
@@ -218,18 +225,58 @@ Funcionalidades:
 - Exibe grade mensal detalhada.
 - Permite professor marcar avaliacoes e trabalhos por disciplina.
 - Permite editar/excluir eventos.
+- Mantem alunos e demais perfis sem permissao de gerenciamento em modo somente leitura.
 
 Persistencia atual:
 
 - A agenda de avaliacoes/trabalhos usa `localStorage`.
 - A chave e separada por usuario autenticado.
 - Para uso multiusuario real, criar endpoints no backend.
+- Para notificar alunos matriculados quando o professor marcar avaliacao ou trabalho, o backend deve relacionar disciplina, matriculas e notificacoes.
 
 Feriados:
 
 - Feriados fixos nacionais.
 - Paixao de Cristo calculada a partir da Pascoa.
 - Dia Nacional de Zumbi e da Consciencia Negra incluido como feriado nacional.
+
+### 7.8 Holerite demonstrativo ficticio
+
+Rota: `/holerite`.
+
+Arquivos:
+
+- `pages/holerite.vue`
+- `middleware/funcionario.ts`
+- `utils/holerite-ficticio.ts`
+
+Funcionalidades:
+
+- Disponivel somente para professor, administrador, diretoria e demais perfis nao alunos.
+- Gera contracheque demonstrativo localmente no front.
+- Permite selecionar competencia dos ultimos 12 meses.
+- Exibe funcionario, cargo, matricula ficticia, proventos, descontos, informativos e valor liquido ficticio.
+- Permite copiar resumo textual.
+- Permite imprimir a tela pelo navegador.
+
+Rubricas ficticias:
+
+- Salario base.
+- Gratificacao pedagogica ou administrativa.
+- Auxilio alimentacao.
+- Auxilio transporte.
+- INSS demonstrativo.
+- IRRF demonstrativo.
+- Vale transporte.
+- Plano de saude.
+- Contribuicao associativa.
+- FGTS apenas informativo.
+
+Observacoes:
+
+- O demonstrativo sempre informa que nao possui valor trabalhista, fiscal ou contabil.
+- Nao ha endpoint de holerite no momento.
+- Para holerites oficiais, sera necessario backend com persistencia, autorizacao por usuario, armazenamento/geracao de documento e auditoria.
 
 ## 8. Componentes reutilizaveis
 
@@ -257,6 +304,7 @@ Responsabilidades:
 | `utils/caderneta-digital.ts` | Parse de notas e regras locais da caderneta |
 | `utils/date-utils.ts` | Mascara, parse e formatacao de datas |
 | `utils/feriados-brasil.ts` | Feriados nacionais brasileiros |
+| `utils/holerite-ficticio.ts` | Rubricas, totais e resumo do holerite ficticio |
 | `utils/password-strength.ts` | Regras de forca de senha |
 | `utils/qr-code-bancario.ts` | Dados ficticios e payload de QR Code |
 | `utils/usuario-permissions.ts` | Regras visuais de permissao |
@@ -282,6 +330,12 @@ Principais interfaces:
 Campo novo:
 
 - `dataNascimento?: string | null` em usuarios.
+
+Funcionalidades locais sem contrato de API:
+
+- QR Code bancario ficticio.
+- Holerite demonstrativo ficticio.
+- Agenda escolar de avaliacoes/trabalhos enquanto persistir em `localStorage`.
 
 ## 11. Endpoints consumidos
 
@@ -321,6 +375,7 @@ Cobertura:
 - Caderneta digital.
 - Date utils.
 - Feriados brasileiros.
+- Holerite demonstrativo ficticio.
 - Forca de senha.
 - QR Code bancario ficticio.
 - Permissoes de usuario.
@@ -358,8 +413,10 @@ Docker:
    - `PUT /agenda-escolar/:id`
    - `DELETE /agenda-escolar/:id`
 3. Sincronizar agenda entre professores/alunos.
-4. Opcionalmente criar envio real de e-mail/WhatsApp para QR Code.
-5. Opcionalmente mover feriados para endpoint configuravel, caso haja feriados estaduais/municipais.
+4. Disparar notificacoes para alunos matriculados quando o professor marcar avaliacao ou trabalho.
+5. Criar endpoints reais de holerite caso deixe de ser demonstrativo ficticio.
+6. Opcionalmente criar envio real de e-mail/WhatsApp para QR Code.
+7. Opcionalmente mover feriados para endpoint configuravel, caso haja feriados estaduais/municipais.
 
 ## 16. Manutencao
 

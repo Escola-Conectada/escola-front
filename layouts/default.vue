@@ -167,6 +167,7 @@ const tituloPagina = computed(() => {
   if (route.path.startsWith('/caderneta-digital')) return 'Caderneta Digital'
   if (route.path.startsWith('/calendario-escolar')) return 'Calendario Escolar'
   if (route.path.startsWith('/qr-code-bancario')) return 'QR Code Bancario'
+  if (route.path.startsWith('/holerite')) return 'Holerite'
   if (route.path.startsWith('/alterar-senha')) return 'Alterar senha'
 
   return 'Escola High Tech'

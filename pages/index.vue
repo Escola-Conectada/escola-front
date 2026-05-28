@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowRight, BookOpen, CalendarDays, QrCode, ShieldCheck, UserCog } from '@lucide/vue'
+import { ArrowRight, BookOpen, CalendarDays, FileText, QrCode, ShieldCheck, UserCog } from '@lucide/vue'
 
 const auth = useAuthStore()
 
@@ -51,6 +51,7 @@ const modulos = computed(() => [
   { label: 'Caderneta Digital', title: auth.isProfessor ? 'Administrar notas e frequencia' : 'Visualizar boletim e frequencia', to: '/caderneta-digital', icon: BookOpen, show: true },
   { label: 'Calendario Escolar', title: auth.isProfessor ? 'Planejar avaliacoes e trabalhos' : 'Consultar agenda escolar', to: '/calendario-escolar', icon: CalendarDays, show: true },
   { label: 'QR Code', title: 'Gerar dados bancarios ficticios', to: '/qr-code-bancario', icon: QrCode, show: auth.isAluno },
+  { label: 'Holerite', title: 'Visualizar demonstrativo ficticio', to: '/holerite', icon: FileText, show: !auth.isAluno },
   { label: 'Seguranca', title: 'Alterar senha', to: '/alterar-senha', icon: ShieldCheck, show: true }
 ].filter((item) => item.show))
 </script>

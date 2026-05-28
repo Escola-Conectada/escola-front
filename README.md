@@ -4,7 +4,7 @@ Frontend da aplicacao Escola High Tech, construido em Nuxt 3. Este README cobre 
 
 ## Visao geral
 
-O projeto e uma SPA para gestao escolar. A aplicacao consome uma API REST externa e oferece autenticacao, painel inicial, gestao de usuarios, caderneta digital, notificacoes, QR Code bancario ficticio e calendario escolar.
+O projeto e uma SPA para gestao escolar. A aplicacao consome uma API REST externa e oferece autenticacao, painel inicial, gestao de usuarios, caderneta digital, notificacoes, QR Code bancario ficticio para alunos, calendario escolar e holerite demonstrativo ficticio para funcionarios.
 
 O layout usa fundo claro, cards brancos, destaque laranja para marca/secao, botoes em verde/teal e icones Lucide.
 
@@ -35,6 +35,8 @@ ESCOLA_FRONT/
 |-- docs/                            # Documentacao tecnica em PDF/Markdown
 |-- layouts/                         # Layouts default e auth
 |-- middleware/auth.global.ts        # Guarda global de autenticacao/autorizacao
+|-- middleware/aluno.ts              # Restringe rotas exclusivas de alunos
+|-- middleware/funcionario.ts        # Restringe rotas exclusivas de funcionarios
 |-- pages/                           # Rotas Nuxt
 |-- plugins/api.ts                   # Injeta o cliente HTTP $api
 |-- stores/                          # Stores Pinia
@@ -129,6 +131,7 @@ flowchart TD
   P --> CD[/caderneta-digital]
   P --> CE[/calendario-escolar]
   P --> QR[/qr-code-bancario]
+  P --> HO[/holerite]
   P --> AS[/alterar-senha]
 
   US --> USN[/usuarios/novo]
@@ -147,7 +150,8 @@ flowchart TD
 | `/usuarios/:id` | Visualizacao, edicao e exclusao de usuario conforme perfil |
 | `/caderneta-digital` | Cadastro de disciplinas, lancamento de notas/frequencia e consulta da caderneta |
 | `/calendario-escolar` | Calendario anual, feriados nacionais e agenda de avaliacoes/trabalhos |
-| `/qr-code-bancario` | Geracao de QR Code com dados bancarios ficticios |
+| `/qr-code-bancario` | Geracao de QR Code com dados bancarios ficticios, exclusiva para aluno |
+| `/holerite` | Holerite demonstrativo ficticio, exclusivo para professor/administrador/diretoria/funcionario |
 
 ## Perfis de acesso
 
@@ -155,8 +159,8 @@ A sessao autenticada guarda usuario, token JWT, data de expiracao e flag de senh
 
 Os perfis reconhecidos no front sao:
 
-- `Administrador` ou `Membro da Diretoria`: acesso completo a usuarios, notificacoes, consulta geral e documentos permitidos.
-- `Professor`: consulta usuarios permitidos, administra caderneta, agenda avaliacoes/trabalhos, consulta documentos conforme regra e edita dados permitidos.
+- `Administrador` ou `Membro da Diretoria`: acesso completo a usuarios, notificacoes, consulta geral, documentos permitidos e holerite demonstrativo.
+- `Professor`: consulta usuarios permitidos, administra caderneta, agenda avaliacoes/trabalhos, consulta documentos conforme regra, edita dados permitidos e visualiza holerite demonstrativo.
 - `Aluno`: consulta o proprio cadastro, caderneta, calendario escolar e QR Code ficticio.
 
 Matriz resumida:
@@ -169,8 +173,9 @@ Matriz resumida:
 | Foto de perfil | Edita conforme permissao | Edita conforme permissao | Edita propria foto quando permitido |
 | Certificados PDF | Consulta/gerencia conforme regra | Consulta/gerencia conforme regra | Consulta conforme regra |
 | Caderneta Digital | Consulta | Administra disciplinas, notas e frequencia | Consulta dados associados |
-| Calendario Escolar | Consulta | Marca avaliacoes e trabalhos | Consulta |
-| QR Code ficticio | Gera | Gera | Gera |
+| Calendario Escolar | Consulta | Marca avaliacoes e trabalhos | Consulta somente leitura |
+| QR Code ficticio | Nao acessa | Nao acessa | Gera |
+| Holerite ficticio | Consulta | Consulta | Nao acessa |
 
 Observacao: o front controla a experiencia e evita acoes indevidas na UI, mas a API deve continuar sendo a fonte final de autorizacao.
 
@@ -219,6 +224,8 @@ Mensagens longas, URLs de fotos e URLs de PDF sao quebradas dentro do popup para
 
 Disponivel em `/qr-code-bancario`.
 
+Disponivel somente para alunos. O painel oculta o modulo para professor/administrador/diretoria, e a rota usa `middleware/aluno.ts` para redirecionar perfis nao alunos.
+
 O front gera dados bancarios demonstrativos por aluno e transforma o payload em QR Code com a biblioteca `qrcode`.
 
 A tela permite:
@@ -233,6 +240,33 @@ A tela permite:
 
 Todo payload e marcado como `SEM VALOR BANCARIO`.
 
+### Holerite demonstrativo ficticio
+
+Disponivel em `/holerite`.
+
+Disponivel somente para perfis nao alunos. O painel exibe o modulo para professor/administrador/diretoria/funcionario, e a rota usa `middleware/funcionario.ts` para redirecionar alunos.
+
+O holerite e gerado localmente no front e possui valores demonstrativos, sem valor trabalhista, fiscal, contabil ou oficial. A tela permite:
+
+- Selecionar competencia dos ultimos 12 meses.
+- Visualizar dados do funcionario, cargo e matricula ficticia.
+- Visualizar proventos, descontos, informativos e valor liquido ficticio.
+- Copiar resumo do demonstrativo.
+- Imprimir a tela.
+
+Rubricas ficticias incluidas:
+
+- Salario base.
+- Gratificacao pedagogica ou administrativa.
+- Auxilio alimentacao.
+- Auxilio transporte.
+- INSS demonstrativo.
+- IRRF demonstrativo.
+- Vale transporte.
+- Plano de saude.
+- Contribuicao associativa.
+- FGTS apenas informativo.
+
 ### Calendario Escolar
 
 Disponivel em `/calendario-escolar`.
@@ -244,10 +278,11 @@ O painel exibe:
 - Feriados nacionais brasileiros.
 - Agenda mensal com avaliacoes e trabalhos.
 - Formulario para professor marcar datas por disciplina.
+- Visualizacao somente leitura para alunos e demais perfis que nao gerenciam agenda.
 
 Os feriados ficam em `utils/feriados-brasil.ts` e incluem feriados nacionais fixos e a Paixao de Cristo calculada a partir da Pascoa.
 
-A agenda de avaliacoes/trabalhos atualmente persiste no `localStorage` por usuario autenticado. Para uso multiusuario real, o backend deve receber endpoints de agenda escolar.
+A agenda de avaliacoes/trabalhos atualmente persiste no `localStorage` por usuario autenticado. Para uso multiusuario real, o backend deve receber endpoints de agenda escolar e disparar notificacoes para alunos matriculados nas disciplinas marcadas pelo professor.
 
 ## Componentes e utilitarios relevantes
 
@@ -257,6 +292,7 @@ A agenda de avaliacoes/trabalhos atualmente persiste no `localStorage` por usuar
 | `utils/date-utils.ts` | Parse, mascara e formatacao de datas |
 | `utils/feriados-brasil.ts` | Feriados nacionais brasileiros por ano |
 | `utils/qr-code-bancario.ts` | Dados ficticios, payload e mensagem de compartilhamento do QR |
+| `utils/holerite-ficticio.ts` | Rubricas, totais e resumo do holerite demonstrativo ficticio |
 | `utils/br-phone.ts` | Mascara e normalizacao de telefone brasileiro |
 | `utils/password-strength.ts` | Regras de forca de senha |
 | `utils/usuario-permissions.ts` | Normalizacao de perfis e regras de permissao da UI |
@@ -316,6 +352,7 @@ Cobertura atual:
 | `tests/utils/caderneta-digital.spec.ts` | Parse de notas, media e situacao |
 | `tests/utils/date-utils.spec.ts` | Mascara, parse e formatacao de datas |
 | `tests/utils/feriados-brasil.spec.ts` | Feriados nacionais e Paixao de Cristo |
+| `tests/utils/holerite-ficticio.spec.ts` | Rubricas, totais e resumo do holerite ficticio |
 | `tests/utils/password-strength.spec.ts` | Classificacao de senha |
 | `tests/utils/qr-code-bancario.spec.ts` | Dados ficticios e payload do QR Code |
 | `tests/utils/usuario-permissions.spec.ts` | Regras de perfil/permissao |
@@ -351,6 +388,8 @@ As funcionalidades abaixo ja possuem front, mas precisam de apoio do backend par
 
 - Persistir `dataNascimento` nos DTOs e modelos de usuario.
 - Criar endpoints de agenda escolar para avaliacoes e trabalhos.
+- Disparar notificacoes para alunos matriculados quando o professor marcar avaliacao ou trabalho.
+- Criar endpoints reais de holerite caso os demonstrativos deixem de ser ficticios.
 - Envio real de e-mail/WhatsApp para QR Code, caso necessario.
 
 ## Observacoes de manutencao
