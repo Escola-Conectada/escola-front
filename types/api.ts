@@ -147,12 +147,58 @@ export interface EsqueciSenhaResponse {
 export interface DisciplinaCaderneta {
   idDisciplina: number
   nome: string
-  idProfessorUsuario: number
+  idProfessorUsuario?: number | null
   nomeProfessor: string
+  idTipoEnsino?: number | null
+  nomeTipoEnsino?: string | null
+  idTurmaEnsino?: number | null
+  nomeTurmaEnsino?: string | null
+  idAreaConhecimento?: number | null
+  nomeAreaConhecimento?: string | null
+  observacao?: string | null
+  ofertaObrigatoria: boolean
+  matriculaFacultativa: boolean
+  ordem: number
 }
 
 export interface DisciplinaCadernetaPayload {
   nome: string
+  idTurmaEnsino?: number | null
+  idAreaConhecimento?: number | null
+  observacao?: string | null
+  ofertaObrigatoria?: boolean
+  matriculaFacultativa?: boolean
+}
+
+export interface TipoEnsinoCurricular {
+  idTipoEnsino: number
+  nome: string
+  ordem: number
+  turmas: TurmaEnsinoCurricular[]
+}
+
+export interface TurmaEnsinoCurricular {
+  idTurmaEnsino: number
+  nome: string
+  codigo: string
+  ordem: number
+  areasConhecimento: AreaConhecimentoCurricular[]
+}
+
+export interface AreaConhecimentoCurricular {
+  idAreaConhecimento: number
+  nome: string
+  ordem: number
+  disciplinas: DisciplinaCurricular[]
+}
+
+export interface DisciplinaCurricular {
+  idDisciplina: number
+  nome: string
+  observacao?: string | null
+  ofertaObrigatoria: boolean
+  matriculaFacultativa: boolean
+  ordem: number
 }
 
 export interface CadernetaDigitalSummary {
@@ -162,8 +208,14 @@ export interface CadernetaDigitalSummary {
   emailAluno: string
   idDisciplina: number
   nomeDisciplina: string
-  idProfessorUsuario: number
+  idProfessorUsuario?: number | null
   nomeProfessor: string
+  idTipoEnsino?: number | null
+  nomeTipoEnsino?: string | null
+  idTurmaEnsino?: number | null
+  nomeTurmaEnsino?: string | null
+  idAreaConhecimento?: number | null
+  nomeAreaConhecimento?: string | null
   notas: number[]
   mediaAritmetica: number
   situacao: string
@@ -174,6 +226,8 @@ export interface CadernetaDigitalSummary {
 
 export interface CadernetaDigitalPayload {
   idAlunoUsuario: number
+  idTipoEnsino: number
+  idTurmaEnsino: number
   idDisciplina: number
   notas: number[]
   presencas: number

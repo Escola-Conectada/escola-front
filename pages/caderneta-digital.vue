@@ -1,376 +1,473 @@
 <template>
-  <section class="grid gap-5 xl:grid-cols-[minmax(300px,380px)_minmax(0,1fr)]">
-    <div v-if="podeAdministrar" class="grid gap-5">
-      <form
-        class="rounded-lg border border-[#d4dee9] bg-white p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] sm:p-6"
-        @submit.prevent="salvarDisciplina"
-      >
-        <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Disciplina</p>
-        <h2 class="mb-6 mt-2 text-xl font-normal text-[#071d3b]">
-          {{ editandoDisciplinaId ? 'Editar disciplina' : 'Cadastro' }}
-        </h2>
-
-        <div class="grid gap-4">
-          <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
-            <span>Nome da disciplina</span>
-            <input
-              v-model.trim="disciplinaForm.nome"
-              class="min-h-11 rounded-md border border-[#ccd8e5] px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
-              type="text"
-              required
-              maxlength="100"
-            />
-            <span class="text-xs font-extrabold text-[#62728a]">{{ disciplinaForm.nome.length }}/100</span>
-          </label>
-
-          <p v-if="erroDisciplina" class="alert alert-error">{{ erroDisciplina }}</p>
-
-          <div class="grid gap-2">
-            <button
-              class="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#147f72] px-4 text-sm font-extrabold text-white transition hover:bg-[#0f6c61] disabled:cursor-wait disabled:opacity-70"
-              type="submit"
-              :disabled="salvandoDisciplina"
-            >
-              <BookOpen class="h-5 w-5" aria-hidden="true" />
-              {{ editandoDisciplinaId ? 'Atualizar disciplina' : 'Cadastrar disciplina' }}
-            </button>
-            <button
-              v-if="editandoDisciplinaId"
-              class="inline-flex min-h-10 items-center justify-center rounded-md border border-[#d4dee9] bg-white px-4 text-sm font-extrabold text-[#51627a] transition hover:bg-[#edf3f8]"
-              type="button"
-              @click="limparDisciplinaForm"
-            >
-              Cancelar edicao
-            </button>
-          </div>
-
-          <div v-if="disciplinas.length" class="grid gap-2">
-            <article
-              v-for="disciplina in disciplinas"
-              :key="disciplina.idDisciplina"
-              class="flex items-center justify-between gap-3 rounded-md border border-[#d4dee9] p-3"
-            >
-              <strong class="min-w-0 truncate text-sm text-[#071d3b]">{{ disciplina.nome }}</strong>
-              <div class="flex shrink-0 gap-2">
-                <button
-                  class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
-                  type="button"
-                  title="Editar disciplina"
-                  aria-label="Editar disciplina"
-                  @click="editarDisciplina(disciplina)"
-                >
-                  <Pencil class="h-4 w-4" aria-hidden="true" />
-                </button>
-                <button
-                  class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-[#ffe1e3] text-[#dc2626] transition hover:bg-[#ffd4d7]"
-                  type="button"
-                  title="Excluir disciplina"
-                  aria-label="Excluir disciplina"
-                  @click="excluirDisciplina(disciplina)"
-                >
-                  <Trash2 class="h-4 w-4" aria-hidden="true" />
-                </button>
-              </div>
-            </article>
-          </div>
-        </div>
-      </form>
-
-      <div
-        class="rounded-lg border border-[#d4dee9] bg-white p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] sm:p-6"
-        @keydown.enter.prevent="salvarLancamento"
-      >
-        <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">{{ editandoLancamentoId ? 'Edicao' : 'Lancamento' }}</p>
-        <h2 class="mb-6 mt-2 text-xl font-normal text-[#071d3b]">Notas e frequencia</h2>
-
-        <div class="grid gap-4">
-          <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
-            <span>Aluno</span>
-            <select
-              v-model.number="lancamentoForm.idAlunoUsuario"
-              class="min-h-11 rounded-md border border-[#ccd8e5] px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
-              required
-            >
-              <option :value="0">Selecione</option>
-              <option v-for="aluno in alunosDisponiveis" :key="aluno.idUsuario" :value="aluno.idUsuario">
-                {{ aluno.nome }} - {{ aluno.email }}
-              </option>
-            </select>
-          </label>
-
-          <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
-            <span>Disciplina</span>
-            <select
-              v-model.number="lancamentoForm.idDisciplina"
-              class="min-h-11 rounded-md border border-[#ccd8e5] px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
-              required
-            >
-              <option :value="0">Selecione</option>
-              <option v-for="disciplina in disciplinas" :key="disciplina.idDisciplina" :value="disciplina.idDisciplina">
-                {{ disciplina.nome }}
-              </option>
-            </select>
-          </label>
-
-          <div class="grid gap-3 sm:grid-cols-2">
-            <label v-for="(_, index) in lancamentoForm.notas" :key="index" class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
-              <span>Nota {{ index + 1 }}</span>
-              <input
-                v-model="lancamentoForm.notas[index]"
-                class="min-h-11 rounded-md border border-[#ccd8e5] px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
-                type="number"
-                min="0"
-                max="10"
-                step="0.1"
-              />
-            </label>
-          </div>
-
-          <div class="grid gap-3 sm:grid-cols-2">
-            <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
-              <span>Presencas</span>
-              <input
-                v-model.number="lancamentoForm.presencas"
-                class="min-h-11 rounded-md border border-[#ccd8e5] px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
-                type="number"
-                min="0"
-                required
-              />
-            </label>
-            <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
-              <span>Faltas</span>
-              <input
-                v-model.number="lancamentoForm.faltas"
-                class="min-h-11 rounded-md border border-[#ccd8e5] px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
-                type="number"
-                min="0"
-                required
-              />
-            </label>
-          </div>
-
-          <p v-if="erroLancamento" class="alert alert-error">{{ erroLancamento }}</p>
-          <p v-if="mensagemLancamento" class="alert alert-success">{{ mensagemLancamento }}</p>
-
-          <div class="grid gap-2">
-            <button
-              ref="salvarLancamentoButton"
-              class="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#147f72] px-4 text-sm font-extrabold text-white transition hover:bg-[#0f6c61] disabled:cursor-wait disabled:opacity-70"
-              type="button"
-              :disabled="salvandoLancamento"
-              @click.prevent.stop="salvarLancamento"
-            >
-              <ClipboardCheck class="h-5 w-5" aria-hidden="true" />
-              {{ editandoLancamentoId ? 'Atualizar lancamento' : 'Salvar lancamento' }}
-            </button>
-            <button
-              v-if="editandoLancamentoId"
-              class="inline-flex min-h-10 items-center justify-center rounded-md border border-[#d4dee9] bg-white px-4 text-sm font-extrabold text-[#51627a] transition hover:bg-[#edf3f8]"
-              type="button"
-              @click="limparLancamentoForm"
-            >
-              Cancelar edicao
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <aside
-      v-else
-      class="rounded-lg border border-[#d4dee9] bg-white p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] sm:p-6"
-    >
-      <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Consulta</p>
-      <h2 class="mb-3 mt-2 text-xl font-normal text-[#071d3b]">Caderneta Digital</h2>
-      <p class="m-0 text-sm font-semibold text-[#62728a]">{{ textoPermissao }}</p>
-    </aside>
-
-    <article class="min-w-0 rounded-lg border border-[#d4dee9] bg-white p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] sm:p-6">
+  <section class="grid gap-5">
+    <article class="rounded-lg border border-[#d4dee9] bg-white/95 p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] backdrop-blur-sm sm:p-6">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">{{ lancamentosVisiveis.length }} registro(s)</p>
-          <h2 class="m-0 mt-2 text-xl font-normal text-[#071d3b]">Caderneta Digital</h2>
+          <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Estrutura de ensino</p>
+          <h2 class="m-0 mt-2 text-xl font-normal text-[#071d3b]">Tipos, turmas e disciplinas</h2>
         </div>
-        <button
-          class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
-          type="button"
-          title="Atualizar dados"
-          aria-label="Atualizar dados"
-          @click="carregarDados"
-        >
-          <RefreshCcw class="h-5 w-5" aria-hidden="true" />
-        </button>
+        <span class="inline-flex w-fit items-center rounded-md border border-[#d4dee9] bg-[#f8fbfd] px-3 py-2 text-sm font-extrabold text-[#51627a]">
+          {{ carregandoEstrutura ? 'Carregando...' : `${estruturaEnsino.length} tipo(s)` }}
+        </span>
       </div>
 
-      <div class="mt-5 grid gap-3 md:grid-cols-[minmax(0,1fr)_240px]">
-        <div class="relative">
-          <Search class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#62728a]" aria-hidden="true" />
-          <input
-            v-model.trim="busca"
-            class="min-h-11 rounded-md border border-[#ccd8e5] pl-12 pr-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
-            type="search"
-            placeholder="Consultar caderneta"
-          />
-        </div>
+      <div class="mt-5 grid gap-4 lg:grid-cols-[minmax(220px,280px)_minmax(220px,280px)_minmax(0,1fr)] lg:items-end">
+        <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
+          <span>Tipo do ensino</span>
+          <select
+            v-model.number="estruturaTipoEnsinoId"
+            class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+            :disabled="!estruturaEnsino.length"
+          >
+            <option :value="0">Selecione</option>
+            <option v-for="tipo in estruturaEnsino" :key="tipo.idTipoEnsino" :value="tipo.idTipoEnsino">
+              {{ tipo.nome }}
+            </option>
+          </select>
+        </label>
 
-        <select
-          v-model.number="disciplinaFiltro"
-          class="min-h-11 rounded-md border border-[#ccd8e5] px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
-          aria-label="Filtrar por disciplina"
-        >
-          <option :value="0">Todas as disciplinas</option>
-          <option v-for="disciplina in disciplinasVisiveis" :key="disciplina.idDisciplina" :value="disciplina.idDisciplina">
-            {{ disciplina.nome }}
-          </option>
-        </select>
+        <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
+          <span>Turma</span>
+          <select
+            v-model.number="estruturaTurmaEnsinoId"
+            class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+            :disabled="!estruturaTurmasSelecionadas.length"
+          >
+            <option :value="0">Selecione</option>
+            <option v-for="turma in estruturaTurmasSelecionadas" :key="turma.idTurmaEnsino" :value="turma.idTurmaEnsino">
+              {{ turma.nome }} - {{ turma.codigo }}
+            </option>
+          </select>
+        </label>
+
+        <div class="grid gap-3 rounded-md border border-[#d4dee9] bg-[#f8fbfd]/95 p-4 sm:grid-cols-3">
+          <div>
+            <span class="text-xs font-extrabold uppercase text-[#62728a]">Tipo</span>
+            <strong class="mt-1 block text-sm text-[#071d3b]">{{ estruturaTipoSelecionado?.nome || '-' }}</strong>
+          </div>
+          <div>
+            <span class="text-xs font-extrabold uppercase text-[#62728a]">Turmas</span>
+            <strong class="mt-1 block text-sm text-[#071d3b]">{{ totalTurmasEstruturaSelecionada }}</strong>
+          </div>
+          <div>
+            <span class="text-xs font-extrabold uppercase text-[#62728a]">Disciplinas</span>
+            <strong class="mt-1 block text-sm text-[#071d3b]">{{ totalDisciplinasEstruturaSelecionada }}</strong>
+          </div>
+        </div>
       </div>
 
-      <p v-if="erroLista" class="alert alert-error mt-4">{{ erroLista }}</p>
-      <p v-if="!carregando && auth.isAluno && !lancamentosVisiveis.length" class="alert alert-warning mt-4">
-        Nenhuma disciplina associada ao seu cadastro.
-      </p>
+      <p v-if="erroEstrutura" class="alert alert-error mt-4">{{ erroEstrutura }}</p>
 
-      <div class="mt-4 hidden max-h-[560px] overflow-y-auto rounded-lg border border-[#d4dee9] md:block">
-        <div
-          class="grid items-center gap-3 bg-[#f5f8fb] px-4 py-3 text-xs font-extrabold uppercase text-[#51627a]"
-          :style="{ gridTemplateColumns: gradeCadernetaTemplate }"
-        >
-          <span>Aluno</span>
-          <span>Disciplina</span>
-          <span class="text-center">Aprendizado</span>
-          <span>Frequencia</span>
-          <span v-if="podeAdministrar" class="text-center">Acoes</span>
-        </div>
-
+      <div v-if="estruturaAreasSelecionadas.length" class="mt-5 grid gap-3 lg:grid-cols-2">
         <article
-          v-for="lancamento in lancamentosFiltrados"
-          :key="lancamento.idCadernetaDigital"
-          class="grid items-center gap-3 border-t border-[#d4dee9] px-4 py-4 text-sm"
-          :style="{ gridTemplateColumns: gradeCadernetaTemplate }"
-        >
-          <div class="min-w-0">
-            <strong class="block truncate text-[#243044]">{{ lancamento.nomeAluno }}</strong>
-            <span class="mt-1 block break-all text-xs font-semibold text-[#51627a]">{{ lancamento.emailAluno }}</span>
-          </div>
-          <span class="min-w-0 break-words font-semibold text-[#243044]">{{ lancamento.nomeDisciplina }}</span>
-          <div class="flex justify-center">
-            <button
-              class="group relative inline-flex h-10 w-10 items-center justify-center rounded-md border transition focus:outline-none focus:ring-4"
-              :class="aprendizadoSituacaoVisual(lancamento).buttonClass"
-              type="button"
-              :title="aprendizadoSituacaoTooltip(lancamento)"
-              :aria-label="aprendizadoSituacaoTooltip(lancamento)"
-              @click="abrirAprendizado(lancamento)"
-            >
-              <component :is="aprendizadoSituacaoVisual(lancamento).icon" class="h-5 w-5" aria-hidden="true" />
-              <span
-                class="pointer-events-none absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-extrabold text-white opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100"
-                :class="aprendizadoSituacaoVisual(lancamento).tooltipClass"
-              >
-                {{ aprendizadoSituacaoTooltip(lancamento) }}
-              </span>
-            </button>
-          </div>
-          <span class="text-[#243044]">
-            <strong>{{ lancamento.presencas }}</strong> presencas<br />
-            <strong>{{ lancamento.faltas }}</strong> faltas
-          </span>
-          <div v-if="podeAdministrar" class="flex justify-center gap-2">
-            <button
-              class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
-              type="button"
-              title="Editar lancamento"
-              aria-label="Editar lancamento"
-              @click="editarLancamento(lancamento)"
-            >
-              <Pencil class="h-5 w-5" aria-hidden="true" />
-            </button>
-            <button
-              class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#ffe1e3] text-[#dc2626] transition hover:bg-[#ffd4d7]"
-              type="button"
-              title="Excluir lancamento"
-              aria-label="Excluir lancamento"
-              @click="excluirLancamento(lancamento)"
-            >
-              <Trash2 class="h-5 w-5" aria-hidden="true" />
-            </button>
-          </div>
-        </article>
-
-        <p v-if="!carregando && !lancamentosFiltrados.length" class="m-0 border-t border-[#d4dee9] px-4 py-6 text-[#62728a]">
-          Nenhum registro encontrado.
-        </p>
-        <p v-if="carregando" class="m-0 border-t border-[#d4dee9] px-4 py-6 text-[#62728a]">
-          Carregando caderneta...
-        </p>
-      </div>
-
-      <div class="mt-4 grid gap-3 md:hidden">
-        <article
-          v-for="lancamento in lancamentosFiltrados"
-          :key="lancamento.idCadernetaDigital"
+          v-for="area in estruturaAreasSelecionadas"
+          :key="area.idAreaConhecimento"
           class="rounded-lg border border-[#d4dee9] bg-white p-4"
         >
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
-              <h3 class="m-0 truncate text-base font-extrabold text-[#071d3b]">{{ lancamento.nomeAluno }}</h3>
-              <p class="m-0 mt-1 break-all text-sm text-[#51627a]">{{ lancamento.emailAluno }}</p>
+              <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Area</p>
+              <h3 class="m-0 mt-1 break-words text-base font-extrabold text-[#071d3b]">{{ area.nome }}</h3>
             </div>
-            <span class="rounded-md bg-[#eaf4f1] px-2 py-1 text-xs font-extrabold text-[#006b61]">
-              {{ lancamento.nomeDisciplina }}
+            <span class="shrink-0 rounded-md bg-[#edf3f8] px-2 py-1 text-xs font-extrabold text-[#51627a]">
+              {{ area.disciplinas.length }}
             </span>
           </div>
-          <div class="mt-3 grid gap-2 text-sm text-[#243044]">
-            <button
-              class="group relative inline-flex min-h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-extrabold transition focus:outline-none focus:ring-4"
-              :class="aprendizadoSituacaoVisual(lancamento).buttonClass"
-              type="button"
-              :title="aprendizadoSituacaoTooltip(lancamento)"
-              :aria-label="aprendizadoSituacaoTooltip(lancamento)"
-              @click="abrirAprendizado(lancamento)"
+          <div class="mt-3 flex flex-wrap gap-2">
+            <span
+              v-for="disciplina in area.disciplinas"
+              :key="disciplina.idDisciplina"
+              class="rounded-md border border-[#cbdce8] bg-[#f8fbfd] px-2.5 py-1.5 text-xs font-extrabold text-[#243044]"
+              :title="disciplina.observacao || disciplina.nome"
             >
-              <component :is="aprendizadoSituacaoVisual(lancamento).icon" class="h-5 w-5" aria-hidden="true" />
-              Aprendizado
-              <span
-                class="pointer-events-none absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-extrabold text-white opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100"
-                :class="aprendizadoSituacaoVisual(lancamento).tooltipClass"
-              >
-                {{ aprendizadoSituacaoTooltip(lancamento) }}
-              </span>
-            </button>
-            <span><strong>Presencas:</strong> {{ lancamento.presencas }}</span>
-            <span><strong>Faltas:</strong> {{ lancamento.faltas }}</span>
-          </div>
-          <div v-if="podeAdministrar" class="mt-4 flex flex-wrap gap-2">
-            <button
-              class="inline-flex h-10 flex-1 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
-              type="button"
-              title="Editar lancamento"
-              aria-label="Editar lancamento"
-              @click="editarLancamento(lancamento)"
-            >
-              <Pencil class="h-5 w-5" aria-hidden="true" />
-            </button>
-            <button
-              class="inline-flex h-10 flex-1 items-center justify-center rounded-md bg-[#ffe1e3] text-[#dc2626] transition hover:bg-[#ffd4d7]"
-              type="button"
-              title="Excluir lancamento"
-              aria-label="Excluir lancamento"
-              @click="excluirLancamento(lancamento)"
-            >
-              <Trash2 class="h-5 w-5" aria-hidden="true" />
-            </button>
+              {{ disciplina.nome }}
+            </span>
           </div>
         </article>
-
-        <p v-if="!carregando && !lancamentosFiltrados.length" class="m-0 rounded-lg border border-[#d4dee9] bg-white p-4 text-[#62728a]">
-          Nenhum registro encontrado.
-        </p>
-        <p v-if="carregando" class="m-0 rounded-lg border border-[#d4dee9] bg-white p-4 text-[#62728a]">
-          Carregando caderneta...
-        </p>
       </div>
+
+      <p v-else-if="!carregandoEstrutura" class="mt-5 rounded-lg border border-[#d4dee9] bg-[#f8fbfd] p-4 text-sm font-semibold text-[#51627a]">
+        Nenhuma estrutura curricular encontrada.
+      </p>
     </article>
+
+    <div class="grid gap-5 xl:grid-cols-[minmax(320px,430px)_minmax(0,1fr)] xl:items-start">
+      <div v-if="podeAdministrar" class="grid gap-5">
+        <div
+          class="rounded-lg border border-[#d4dee9] bg-white/95 p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] backdrop-blur-sm sm:p-6"
+          @keydown.enter.prevent="salvarLancamento"
+        >
+          <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">{{ editandoLancamentoId ? 'Edicao' : 'Lancamento' }}</p>
+          <h2 class="mb-6 mt-2 text-xl font-normal text-[#071d3b]">Notas e frequencia</h2>
+
+          <div class="grid gap-4">
+            <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
+              <span>Aluno</span>
+              <select
+                v-model.number="lancamentoForm.idAlunoUsuario"
+                class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+                required
+              >
+                <option :value="0">Selecione</option>
+                <option v-for="aluno in alunosDisponiveis" :key="aluno.idUsuario" :value="aluno.idUsuario">
+                  {{ aluno.nome }} - {{ aluno.email }}
+                </option>
+              </select>
+            </label>
+
+            <div class="grid gap-3 sm:grid-cols-2">
+              <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
+                <span>Tipo do ensino</span>
+                <select
+                  v-model.number="lancamentoForm.idTipoEnsino"
+                  class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+                  required
+                >
+                  <option :value="0">Selecione</option>
+                  <option v-for="tipo in estruturaEnsino" :key="tipo.idTipoEnsino" :value="tipo.idTipoEnsino">
+                    {{ tipo.nome }}
+                  </option>
+                </select>
+              </label>
+
+              <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
+                <span>Turma</span>
+                <select
+                  v-model.number="lancamentoForm.idTurmaEnsino"
+                  class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+                  required
+                  :disabled="!turmasLancamento.length"
+                >
+                  <option :value="0">Selecione</option>
+                  <option v-for="turma in turmasLancamento" :key="turma.idTurmaEnsino" :value="turma.idTurmaEnsino">
+                    {{ turma.nome }} - {{ turma.codigo }}
+                  </option>
+                </select>
+              </label>
+            </div>
+
+            <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
+              <span>Disciplina</span>
+              <select
+                v-model.number="lancamentoForm.idDisciplina"
+                class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+                required
+                :disabled="!areasLancamento.length && !disciplinasProfessorLancamento.length"
+              >
+                <option :value="0">Selecione</option>
+                <optgroup v-for="area in areasLancamento" :key="area.idAreaConhecimento" :label="area.nome">
+                  <option v-for="disciplina in area.disciplinas" :key="disciplina.idDisciplina" :value="disciplina.idDisciplina">
+                    {{ disciplina.nome }}
+                  </option>
+                </optgroup>
+                <optgroup v-if="disciplinasProfessorLancamento.length" label="Minhas disciplinas">
+                  <option v-for="disciplina in disciplinasProfessorLancamento" :key="disciplina.idDisciplina" :value="disciplina.idDisciplina">
+                    {{ disciplina.nome }}
+                  </option>
+                </optgroup>
+              </select>
+            </label>
+
+            <div v-if="disciplinaLancamentoSelecionada" class="grid gap-2 rounded-md border border-[#d4dee9] bg-[#f8fbfd]/95 p-3 text-sm">
+              <span><strong>Area:</strong> {{ disciplinaLancamentoSelecionada.nomeAreaConhecimento || '-' }}</span>
+              <span><strong>Turma:</strong> {{ disciplinaLancamentoSelecionada.nomeTurmaEnsino || turmaLancamentoSelecionada?.nome || '-' }}</span>
+              <span><strong>Oferta:</strong> {{ disciplinaLancamentoSelecionada.matriculaFacultativa ? 'Matricula facultativa' : 'Obrigatoria' }}</span>
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-2">
+              <label v-for="(_, index) in lancamentoForm.notas" :key="index" class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
+                <span>Nota {{ index + 1 }}</span>
+                <input
+                  v-model="lancamentoForm.notas[index]"
+                  class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+                  type="number"
+                  min="0"
+                  max="10"
+                  step="0.1"
+                />
+              </label>
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-2">
+              <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
+                <span>Presencas</span>
+                <input
+                  v-model.number="lancamentoForm.presencas"
+                  class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+                  type="number"
+                  min="0"
+                  required
+                />
+              </label>
+              <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
+                <span>Faltas</span>
+                <input
+                  v-model.number="lancamentoForm.faltas"
+                  class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+                  type="number"
+                  min="0"
+                  required
+                />
+              </label>
+            </div>
+
+            <p v-if="erroLancamento" class="alert alert-error">{{ erroLancamento }}</p>
+            <p v-if="mensagemLancamento" class="alert alert-success">{{ mensagemLancamento }}</p>
+
+            <div class="grid gap-2">
+              <button
+                ref="salvarLancamentoButton"
+                class="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#147f72] px-4 text-sm font-extrabold text-white transition hover:bg-[#0f6c61] disabled:cursor-wait disabled:opacity-70"
+                type="button"
+                :disabled="salvandoLancamento"
+                @click.prevent.stop="salvarLancamento"
+              >
+                <ClipboardCheck class="h-5 w-5" aria-hidden="true" />
+                {{ editandoLancamentoId ? 'Atualizar lancamento' : 'Salvar lancamento' }}
+              </button>
+              <button
+                v-if="editandoLancamentoId"
+                class="inline-flex min-h-10 items-center justify-center rounded-md border border-[#d4dee9] bg-white px-4 text-sm font-extrabold text-[#51627a] transition hover:bg-[#edf3f8]"
+                type="button"
+                @click="limparLancamentoForm"
+              >
+                Cancelar edicao
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside
+        v-else
+        class="rounded-lg border border-[#d4dee9] bg-white/95 p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] backdrop-blur-sm sm:p-6"
+      >
+        <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Consulta</p>
+        <h2 class="mb-3 mt-2 text-xl font-normal text-[#071d3b]">Caderneta Digital</h2>
+        <p class="m-0 text-sm font-semibold text-[#62728a]">{{ textoPermissao }}</p>
+      </aside>
+
+      <article class="min-w-0 rounded-lg border border-[#d4dee9] bg-white/95 p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] backdrop-blur-sm sm:p-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">{{ lancamentosVisiveis.length }} registro(s)</p>
+            <h2 class="m-0 mt-2 text-xl font-normal text-[#071d3b]">Caderneta Digital</h2>
+          </div>
+          <button
+            class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
+            type="button"
+            title="Atualizar dados"
+            aria-label="Atualizar dados"
+            @click="carregarDados"
+          >
+            <RefreshCcw class="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+
+        <div class="mt-5 grid gap-3 xl:grid-cols-[minmax(0,1fr)_180px_160px_210px]">
+          <div class="relative">
+            <Search class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#62728a]" aria-hidden="true" />
+            <input
+              v-model.trim="busca"
+              class="min-h-11 rounded-md border border-[#ccd8e5] bg-white pl-12 pr-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+              type="search"
+              placeholder="Consultar caderneta"
+            />
+          </div>
+
+          <select
+            v-model.number="tipoEnsinoFiltro"
+            class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+            aria-label="Filtrar por tipo do ensino"
+          >
+            <option :value="0">Todos os tipos</option>
+            <option v-for="tipo in estruturaEnsino" :key="tipo.idTipoEnsino" :value="tipo.idTipoEnsino">
+              {{ tipo.nome }}
+            </option>
+          </select>
+
+          <select
+            v-model.number="turmaEnsinoFiltro"
+            class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+            aria-label="Filtrar por turma"
+          >
+            <option :value="0">Todas as turmas</option>
+            <option v-for="turma in turmasFiltroDisponiveis" :key="turma.idTurmaEnsino" :value="turma.idTurmaEnsino">
+              {{ turma.nome }}
+            </option>
+          </select>
+
+          <select
+            v-model.number="disciplinaFiltro"
+            class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+            aria-label="Filtrar por disciplina"
+          >
+            <option :value="0">Todas as disciplinas</option>
+            <option v-for="disciplina in disciplinasFiltroDisponiveis" :key="disciplina.idDisciplina" :value="disciplina.idDisciplina">
+              {{ disciplina.nome }}{{ disciplina.nomeTurmaEnsino ? ` - ${disciplina.nomeTurmaEnsino}` : '' }}
+            </option>
+          </select>
+        </div>
+
+        <p v-if="erroLista" class="alert alert-error mt-4">{{ erroLista }}</p>
+        <p v-if="!carregando && auth.isAluno && !lancamentosVisiveis.length" class="alert alert-warning mt-4">
+          Nenhuma disciplina associada ao seu cadastro.
+        </p>
+
+        <div class="mt-4 hidden max-h-[560px] overflow-auto rounded-lg border border-[#d4dee9] md:block">
+          <div
+            class="grid min-w-[980px] items-center gap-3 bg-[#f5f8fb] px-4 py-3 text-xs font-extrabold uppercase text-[#51627a]"
+            :style="{ gridTemplateColumns: gradeCadernetaTemplate }"
+          >
+            <span>Aluno</span>
+            <span>Ensino / Turma</span>
+            <span>Disciplina</span>
+            <span class="text-center">Aprendizado</span>
+            <span>Frequencia</span>
+            <span v-if="podeAdministrar" class="text-center">Acoes</span>
+          </div>
+
+          <article
+            v-for="lancamento in lancamentosFiltrados"
+            :key="lancamento.idCadernetaDigital"
+            class="grid min-w-[980px] items-center gap-3 border-t border-[#d4dee9] px-4 py-4 text-sm"
+            :style="{ gridTemplateColumns: gradeCadernetaTemplate }"
+          >
+            <div class="min-w-0">
+              <strong class="block truncate text-[#243044]">{{ lancamento.nomeAluno }}</strong>
+              <span class="mt-1 block break-all text-xs font-semibold text-[#51627a]">{{ lancamento.emailAluno }}</span>
+            </div>
+            <div class="min-w-0">
+              <strong class="block truncate text-[#243044]">{{ lancamento.nomeTipoEnsino || 'Tipo nao informado' }}</strong>
+              <span class="mt-1 block truncate text-xs font-semibold text-[#51627a]">{{ lancamento.nomeTurmaEnsino || 'Turma nao informada' }}</span>
+            </div>
+            <div class="min-w-0">
+              <strong class="block break-words text-[#243044]">{{ lancamento.nomeDisciplina }}</strong>
+              <span v-if="lancamento.nomeAreaConhecimento" class="mt-1 block text-xs font-semibold text-[#51627a]">{{ lancamento.nomeAreaConhecimento }}</span>
+              <span v-if="lancamento.nomeProfessor" class="mt-1 block truncate text-xs font-semibold text-[#7a8798]">Prof. {{ lancamento.nomeProfessor }}</span>
+            </div>
+            <div class="flex justify-center">
+              <button
+                class="group relative inline-flex h-10 w-10 items-center justify-center rounded-md border transition focus:outline-none focus:ring-4"
+                :class="aprendizadoSituacaoVisual(lancamento).buttonClass"
+                type="button"
+                :title="aprendizadoSituacaoTooltip(lancamento)"
+                :aria-label="aprendizadoSituacaoTooltip(lancamento)"
+                @click="abrirAprendizado(lancamento)"
+              >
+                <component :is="aprendizadoSituacaoVisual(lancamento).icon" class="h-5 w-5" aria-hidden="true" />
+                <span
+                  class="pointer-events-none absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-extrabold text-white opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100"
+                  :class="aprendizadoSituacaoVisual(lancamento).tooltipClass"
+                >
+                  {{ aprendizadoSituacaoTooltip(lancamento) }}
+                </span>
+              </button>
+            </div>
+            <span class="text-[#243044]">
+              <strong>{{ lancamento.presencas }}</strong> presencas<br />
+              <strong>{{ lancamento.faltas }}</strong> faltas
+            </span>
+            <div v-if="podeAdministrar" class="flex justify-center gap-2">
+              <button
+                class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
+                type="button"
+                title="Editar lancamento"
+                aria-label="Editar lancamento"
+                @click="editarLancamento(lancamento)"
+              >
+                <Pencil class="h-5 w-5" aria-hidden="true" />
+              </button>
+              <button
+                class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#ffe1e3] text-[#dc2626] transition hover:bg-[#ffd4d7]"
+                type="button"
+                title="Excluir lancamento"
+                aria-label="Excluir lancamento"
+                @click="excluirLancamento(lancamento)"
+              >
+                <Trash2 class="h-5 w-5" aria-hidden="true" />
+              </button>
+            </div>
+          </article>
+
+          <p v-if="!carregando && !lancamentosFiltrados.length" class="m-0 min-w-[980px] border-t border-[#d4dee9] px-4 py-6 text-[#62728a]">
+            Nenhum registro encontrado.
+          </p>
+          <p v-if="carregando" class="m-0 min-w-[980px] border-t border-[#d4dee9] px-4 py-6 text-[#62728a]">
+            Carregando caderneta...
+          </p>
+        </div>
+
+        <div class="mt-4 grid gap-3 md:hidden">
+          <article
+            v-for="lancamento in lancamentosFiltrados"
+            :key="lancamento.idCadernetaDigital"
+            class="rounded-lg border border-[#d4dee9] bg-white p-4"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <h3 class="m-0 truncate text-base font-extrabold text-[#071d3b]">{{ lancamento.nomeAluno }}</h3>
+                <p class="m-0 mt-1 break-all text-sm text-[#51627a]">{{ lancamento.emailAluno }}</p>
+              </div>
+              <span class="rounded-md bg-[#eaf4f1] px-2 py-1 text-xs font-extrabold text-[#006b61]">
+                {{ lancamento.nomeDisciplina }}
+              </span>
+            </div>
+            <div class="mt-3 grid gap-2 text-sm text-[#243044]">
+              <span><strong>Tipo:</strong> {{ lancamento.nomeTipoEnsino || 'Tipo nao informado' }}</span>
+              <span><strong>Turma:</strong> {{ lancamento.nomeTurmaEnsino || 'Turma nao informada' }}</span>
+              <span v-if="lancamento.nomeAreaConhecimento"><strong>Area:</strong> {{ lancamento.nomeAreaConhecimento }}</span>
+              <button
+                class="group relative inline-flex min-h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-extrabold transition focus:outline-none focus:ring-4"
+                :class="aprendizadoSituacaoVisual(lancamento).buttonClass"
+                type="button"
+                :title="aprendizadoSituacaoTooltip(lancamento)"
+                :aria-label="aprendizadoSituacaoTooltip(lancamento)"
+                @click="abrirAprendizado(lancamento)"
+              >
+                <component :is="aprendizadoSituacaoVisual(lancamento).icon" class="h-5 w-5" aria-hidden="true" />
+                Aprendizado
+                <span
+                  class="pointer-events-none absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-extrabold text-white opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100"
+                  :class="aprendizadoSituacaoVisual(lancamento).tooltipClass"
+                >
+                  {{ aprendizadoSituacaoTooltip(lancamento) }}
+                </span>
+              </button>
+              <span><strong>Presencas:</strong> {{ lancamento.presencas }}</span>
+              <span><strong>Faltas:</strong> {{ lancamento.faltas }}</span>
+            </div>
+            <div v-if="podeAdministrar" class="mt-4 flex flex-wrap gap-2">
+              <button
+                class="inline-flex h-10 flex-1 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
+                type="button"
+                title="Editar lancamento"
+                aria-label="Editar lancamento"
+                @click="editarLancamento(lancamento)"
+              >
+                <Pencil class="h-5 w-5" aria-hidden="true" />
+              </button>
+              <button
+                class="inline-flex h-10 flex-1 items-center justify-center rounded-md bg-[#ffe1e3] text-[#dc2626] transition hover:bg-[#ffd4d7]"
+                type="button"
+                title="Excluir lancamento"
+                aria-label="Excluir lancamento"
+                @click="excluirLancamento(lancamento)"
+              >
+                <Trash2 class="h-5 w-5" aria-hidden="true" />
+              </button>
+            </div>
+          </article>
+
+          <p v-if="!carregando && !lancamentosFiltrados.length" class="m-0 rounded-lg border border-[#d4dee9] bg-white p-4 text-[#62728a]">
+            Nenhum registro encontrado.
+          </p>
+          <p v-if="carregando" class="m-0 rounded-lg border border-[#d4dee9] bg-white p-4 text-[#62728a]">
+            Carregando caderneta...
+          </p>
+        </div>
+      </article>
+    </div>
 
     <div
       v-if="lancamentoAprendizadoPopup"
@@ -383,6 +480,9 @@
             <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Aprendizado</p>
             <h2 class="m-0 mt-1 break-words text-xl font-normal text-[#071d3b]">{{ lancamentoAprendizadoPopup.nomeAluno }}</h2>
             <p class="m-0 mt-1 break-words text-sm font-semibold text-[#62728a]">{{ lancamentoAprendizadoPopup.nomeDisciplina }}</p>
+            <p class="m-0 mt-1 break-words text-xs font-semibold text-[#7a8798]">
+              {{ formatarContextoEnsino(lancamentoAprendizadoPopup) }}
+            </p>
           </div>
           <button
             class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
@@ -399,6 +499,13 @@
           <div class="rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-4">
             <span class="text-xs font-extrabold uppercase text-[#62728a]">Notas</span>
             <strong class="mt-2 block break-words text-[#071d3b]">{{ formatNotas(lancamentoAprendizadoPopup.notas) }}</strong>
+          </div>
+          <div class="rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-4">
+            <span class="text-xs font-extrabold uppercase text-[#62728a]">Estrutura</span>
+            <strong class="mt-2 block break-words text-[#071d3b]">{{ formatarContextoEnsino(lancamentoAprendizadoPopup) }}</strong>
+            <span v-if="lancamentoAprendizadoPopup.nomeAreaConhecimento" class="mt-1 block text-sm font-semibold text-[#51627a]">
+              {{ lancamentoAprendizadoPopup.nomeAreaConhecimento }}
+            </span>
           </div>
           <div class="grid gap-3 sm:grid-cols-2">
             <div class="rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-4">
@@ -419,12 +526,16 @@
 </template>
 
 <script setup lang="ts">
-import { BookOpen, CircleCheck, CircleX, ClipboardCheck, GraduationCap, Pencil, RefreshCcw, Search, Trash2, TriangleAlert, X } from '@lucide/vue'
+import { CircleCheck, CircleX, ClipboardCheck, GraduationCap, Pencil, RefreshCcw, Search, Trash2, TriangleAlert, X } from '@lucide/vue'
 import type {
+  AreaConhecimentoCurricular,
   CadernetaDigitalPayload,
   CadernetaDigitalSummary,
   DisciplinaCaderneta,
   DisciplinaCadernetaPayload,
+  DisciplinaCurricular,
+  TipoEnsinoCurricular,
+  TurmaEnsinoCurricular,
   UsuarioSummary
 } from '~/types/api'
 import { normalizeApiError } from '~/utils/api-client'
@@ -440,20 +551,42 @@ definePageMeta({
 
 const EMPTY_NOTAS: CadernetaNotaInput[] = ['', '', '', '']
 
+interface DisciplinaOpcao {
+  idDisciplina: number
+  nome: string
+  idTipoEnsino?: number | null
+  nomeTipoEnsino?: string | null
+  idTurmaEnsino?: number | null
+  nomeTurmaEnsino?: string | null
+  idAreaConhecimento?: number | null
+  nomeAreaConhecimento?: string | null
+  observacao?: string | null
+  ofertaObrigatoria: boolean
+  matriculaFacultativa: boolean
+  ordem?: number
+}
+
 const auth = useAuthStore()
 const { $api } = useNuxtApp()
 const usuarios = ref<UsuarioSummary[]>([])
 const disciplinas = ref<DisciplinaCaderneta[]>([])
+const estruturaEnsino = ref<TipoEnsinoCurricular[]>([])
 const lancamentos = ref<CadernetaDigitalSummary[]>([])
 const carregando = ref(false)
+const carregandoEstrutura = ref(false)
 const salvandoDisciplina = ref(false)
 const salvandoLancamento = ref(false)
 const erroLista = ref('')
+const erroEstrutura = ref('')
 const erroDisciplina = ref('')
 const erroLancamento = ref('')
 const mensagemLancamento = ref('')
 const busca = ref('')
+const tipoEnsinoFiltro = ref(0)
+const turmaEnsinoFiltro = ref(0)
 const disciplinaFiltro = ref(0)
+const estruturaTipoEnsinoId = ref(0)
+const estruturaTurmaEnsinoId = ref(0)
 const editandoDisciplinaId = ref<number | null>(null)
 const editandoLancamentoId = ref<number | null>(null)
 const salvarLancamentoButton = ref<HTMLButtonElement | null>(null)
@@ -463,6 +596,8 @@ const disciplinaForm = reactive({
 })
 const lancamentoForm = reactive({
   idAlunoUsuario: 0,
+  idTipoEnsino: 0,
+  idTurmaEnsino: 0,
   idDisciplina: 0,
   notas: [...EMPTY_NOTAS],
   presencas: 0,
@@ -472,11 +607,60 @@ const lancamentoForm = reactive({
 const podeAdministrar = computed(() => auth.isProfessor)
 const gradeCadernetaTemplate = computed(() =>
   podeAdministrar.value
-    ? 'minmax(140px, 1.5fr) minmax(100px, 0.9fr) 110px minmax(90px, 0.75fr) 88px'
-    : 'minmax(140px, 1.6fr) minmax(100px, 0.95fr) 110px minmax(90px, 0.75fr)'
+    ? 'minmax(150px,1.15fr) minmax(130px,0.9fr) minmax(170px,1.15fr) 110px minmax(95px,0.65fr) 88px'
+    : 'minmax(150px,1.2fr) minmax(130px,0.95fr) minmax(170px,1.15fr) 110px minmax(95px,0.7fr)'
 )
 const alunosDisponiveis = computed(() =>
   usuarios.value.filter((usuario) => isPerfilAluno(usuario.descricaoPerfil))
+)
+const estruturaTipoSelecionado = computed(() =>
+  estruturaEnsino.value.find((tipo) => tipo.idTipoEnsino === estruturaTipoEnsinoId.value) ?? null
+)
+const estruturaTurmasSelecionadas = computed(() => estruturaTipoSelecionado.value?.turmas ?? [])
+const estruturaTurmaSelecionada = computed(() =>
+  estruturaTurmasSelecionadas.value.find((turma) => turma.idTurmaEnsino === estruturaTurmaEnsinoId.value) ?? null
+)
+const estruturaAreasSelecionadas = computed(() => estruturaTurmaSelecionada.value?.areasConhecimento ?? [])
+const totalTurmasEstruturaSelecionada = computed(() => estruturaTipoSelecionado.value?.turmas.length ?? 0)
+const totalDisciplinasEstruturaSelecionada = computed(() =>
+  estruturaAreasSelecionadas.value.reduce((total, area) => total + area.disciplinas.length, 0)
+)
+const tipoLancamentoSelecionado = computed(() =>
+  estruturaEnsino.value.find((tipo) => tipo.idTipoEnsino === lancamentoForm.idTipoEnsino) ?? null
+)
+const turmasLancamento = computed(() => tipoLancamentoSelecionado.value?.turmas ?? [])
+const turmaLancamentoSelecionada = computed(() =>
+  turmasLancamento.value.find((turma) => turma.idTurmaEnsino === lancamentoForm.idTurmaEnsino) ?? null
+)
+const areasLancamento = computed(() => turmaLancamentoSelecionada.value?.areasConhecimento ?? [])
+const disciplinasEstrutura = computed<DisciplinaOpcao[]>(() => flattenDisciplinasEstrutura(estruturaEnsino.value))
+const disciplinasProfessorOpcoes = computed<DisciplinaOpcao[]>(() =>
+  disciplinas.value.map((disciplina) => ({
+    idDisciplina: disciplina.idDisciplina,
+    nome: disciplina.nome,
+    idTipoEnsino: disciplina.idTipoEnsino,
+    nomeTipoEnsino: disciplina.nomeTipoEnsino,
+    idTurmaEnsino: disciplina.idTurmaEnsino,
+    nomeTurmaEnsino: disciplina.nomeTurmaEnsino,
+    idAreaConhecimento: disciplina.idAreaConhecimento,
+    nomeAreaConhecimento: disciplina.nomeAreaConhecimento,
+    observacao: disciplina.observacao,
+    ofertaObrigatoria: disciplina.ofertaObrigatoria ?? true,
+    matriculaFacultativa: disciplina.matriculaFacultativa ?? false,
+    ordem: disciplina.ordem
+  }))
+)
+const disciplinasDisponiveis = computed(() =>
+  dedupeDisciplinas([...disciplinasEstrutura.value, ...disciplinasProfessorOpcoes.value])
+)
+const disciplinasProfessorLancamento = computed(() =>
+  disciplinasProfessorOpcoes.value.filter((disciplina) =>
+    disciplina.idTurmaEnsino === lancamentoForm.idTurmaEnsino
+    && !areasLancamento.value.some((area) => area.disciplinas.some((item) => item.idDisciplina === disciplina.idDisciplina))
+  )
+)
+const disciplinaLancamentoSelecionada = computed(() =>
+  disciplinasDisponiveis.value.find((disciplina) => disciplina.idDisciplina === lancamentoForm.idDisciplina) ?? null
 )
 const lancamentosVisiveis = computed(() => {
   if (auth.isAluno) {
@@ -485,26 +669,38 @@ const lancamentosVisiveis = computed(() => {
 
   return lancamentos.value
 })
-const disciplinasVisiveis = computed(() => {
-  const idsVisiveis = new Set(lancamentosVisiveis.value.map((lancamento) => lancamento.idDisciplina))
+const turmasFiltroDisponiveis = computed(() => {
+  const tipos = tipoEnsinoFiltro.value
+    ? estruturaEnsino.value.filter((tipo) => tipo.idTipoEnsino === tipoEnsinoFiltro.value)
+    : estruturaEnsino.value
 
-  return auth.isAluno
-    ? disciplinas.value.filter((disciplina) => idsVisiveis.has(disciplina.idDisciplina))
-    : disciplinas.value
+  return tipos.flatMap((tipo) => tipo.turmas)
 })
+const disciplinasFiltroDisponiveis = computed(() =>
+  disciplinasDisponiveis.value.filter((disciplina) =>
+    (!tipoEnsinoFiltro.value || disciplina.idTipoEnsino === tipoEnsinoFiltro.value)
+    && (!turmaEnsinoFiltro.value || disciplina.idTurmaEnsino === turmaEnsinoFiltro.value)
+  )
+)
 const lancamentosFiltrados = computed(() => {
   const termo = busca.value.toLowerCase()
-  const lancamentosDaDisciplina = disciplinaFiltro.value
-    ? lancamentosVisiveis.value.filter((lancamento) => lancamento.idDisciplina === disciplinaFiltro.value)
-    : lancamentosVisiveis.value
+  const lancamentosFiltradosPorEstrutura = lancamentosVisiveis.value.filter((lancamento) =>
+    (!tipoEnsinoFiltro.value || lancamento.idTipoEnsino === tipoEnsinoFiltro.value)
+    && (!turmaEnsinoFiltro.value || lancamento.idTurmaEnsino === turmaEnsinoFiltro.value)
+    && (!disciplinaFiltro.value || lancamento.idDisciplina === disciplinaFiltro.value)
+  )
 
-  if (!termo) return lancamentosDaDisciplina
+  if (!termo) return lancamentosFiltradosPorEstrutura
 
-  return lancamentosDaDisciplina.filter((lancamento) =>
+  return lancamentosFiltradosPorEstrutura.filter((lancamento) =>
     [
       lancamento.nomeAluno,
       lancamento.emailAluno,
+      lancamento.nomeTipoEnsino,
+      lancamento.nomeTurmaEnsino,
       lancamento.nomeDisciplina,
+      lancamento.nomeAreaConhecimento,
+      lancamento.nomeProfessor,
       formatNotas(lancamento.notas),
       formatarMediaLancamento(lancamento.mediaAritmetica),
       lancamento.situacao
@@ -520,8 +716,45 @@ const textoPermissao = computed(() => {
   return 'Seu perfil permite visualizar a caderneta.'
 })
 
-watch(disciplinasVisiveis, (disponiveis) => {
-  if (disciplinaFiltro.value && !disponiveis.some((disciplina) => disciplina.idDisciplina === disciplinaFiltro.value)) {
+watch(estruturaEnsino, () => {
+  preencherSelecaoEstruturaPadrao()
+  preencherLancamentoPadrao()
+})
+
+watch(estruturaTipoEnsinoId, () => {
+  if (!estruturaTurmasSelecionadas.value.some((turma) => turma.idTurmaEnsino === estruturaTurmaEnsinoId.value)) {
+    estruturaTurmaEnsinoId.value = estruturaTurmasSelecionadas.value[0]?.idTurmaEnsino ?? 0
+  }
+})
+
+watch(() => lancamentoForm.idTipoEnsino, () => {
+  if (!turmasLancamento.value.some((turma) => turma.idTurmaEnsino === lancamentoForm.idTurmaEnsino)) {
+    lancamentoForm.idTurmaEnsino = turmasLancamento.value[0]?.idTurmaEnsino ?? 0
+  }
+
+  if (!lancamentoForm.idDisciplina || !disciplinaPertenceAoLancamento(lancamentoForm.idDisciplina)) {
+    lancamentoForm.idDisciplina = primeiraDisciplinaLancamento()?.idDisciplina ?? 0
+  }
+})
+
+watch(() => lancamentoForm.idTurmaEnsino, () => {
+  if (!lancamentoForm.idDisciplina || !disciplinaPertenceAoLancamento(lancamentoForm.idDisciplina)) {
+    lancamentoForm.idDisciplina = primeiraDisciplinaLancamento()?.idDisciplina ?? 0
+  }
+})
+
+watch(tipoEnsinoFiltro, () => {
+  if (turmaEnsinoFiltro.value && !turmasFiltroDisponiveis.value.some((turma) => turma.idTurmaEnsino === turmaEnsinoFiltro.value)) {
+    turmaEnsinoFiltro.value = 0
+  }
+
+  if (disciplinaFiltro.value && !disciplinasFiltroDisponiveis.value.some((disciplina) => disciplina.idDisciplina === disciplinaFiltro.value)) {
+    disciplinaFiltro.value = 0
+  }
+})
+
+watch(turmaEnsinoFiltro, () => {
+  if (disciplinaFiltro.value && !disciplinasFiltroDisponiveis.value.some((disciplina) => disciplina.idDisciplina === disciplinaFiltro.value)) {
     disciplinaFiltro.value = 0
   }
 })
@@ -541,6 +774,7 @@ async function carregarDados() {
 
   try {
     await Promise.all([
+      carregarEstruturaEnsino(),
       carregarDisciplinas(),
       carregarLancamentos(),
       podeAdministrar.value ? carregarUsuarios() : Promise.resolve()
@@ -549,6 +783,22 @@ async function carregarDados() {
     erroLista.value = normalizeApiError(err)
   } finally {
     carregando.value = false
+  }
+}
+
+async function carregarEstruturaEnsino() {
+  carregandoEstrutura.value = true
+  erroEstrutura.value = ''
+
+  try {
+    estruturaEnsino.value = await $api<TipoEnsinoCurricular[]>('/caderneta-digital/estrutura-ensino')
+    preencherSelecaoEstruturaPadrao()
+    preencherLancamentoPadrao()
+  } catch (err) {
+    estruturaEnsino.value = []
+    erroEstrutura.value = normalizeApiError(err)
+  } finally {
+    carregandoEstrutura.value = false
   }
 }
 
@@ -633,8 +883,8 @@ async function salvarLancamento() {
   mensagemLancamento.value = ''
   const notas = parseCadernetaNotas(lancamentoForm.notas)
 
-  if (!lancamentoForm.idAlunoUsuario || !lancamentoForm.idDisciplina) {
-    erroLancamento.value = 'Informe aluno e disciplina.'
+  if (!lancamentoForm.idAlunoUsuario || !lancamentoForm.idTipoEnsino || !lancamentoForm.idTurmaEnsino || !lancamentoForm.idDisciplina) {
+    erroLancamento.value = 'Informe aluno, tipo do ensino, turma e disciplina.'
     return
   }
 
@@ -651,6 +901,8 @@ async function salvarLancamento() {
   salvandoLancamento.value = true
   const payload: CadernetaDigitalPayload = {
     idAlunoUsuario: lancamentoForm.idAlunoUsuario,
+    idTipoEnsino: lancamentoForm.idTipoEnsino,
+    idTurmaEnsino: lancamentoForm.idTurmaEnsino,
     idDisciplina: lancamentoForm.idDisciplina,
     notas,
     presencas: lancamentoForm.presencas,
@@ -684,11 +936,16 @@ function editarLancamento(lancamento: CadernetaDigitalSummary) {
   if (!podeAdministrar.value) return
 
   editandoLancamentoId.value = lancamento.idCadernetaDigital
+  const disciplina = obterDisciplinaOpcao(lancamento.idDisciplina)
   lancamentoForm.idAlunoUsuario = lancamento.idAlunoUsuario
+  lancamentoForm.idTipoEnsino = lancamento.idTipoEnsino ?? disciplina?.idTipoEnsino ?? 0
+  lancamentoForm.idTurmaEnsino = lancamento.idTurmaEnsino ?? disciplina?.idTurmaEnsino ?? 0
   lancamentoForm.idDisciplina = lancamento.idDisciplina
   lancamentoForm.notas = [...lancamento.notas.map((nota) => String(nota)), ...EMPTY_NOTAS].slice(0, EMPTY_NOTAS.length)
   lancamentoForm.presencas = lancamento.presencas
   lancamentoForm.faltas = lancamento.faltas
+  if (lancamentoForm.idTipoEnsino) estruturaTipoEnsinoId.value = lancamentoForm.idTipoEnsino
+  if (lancamentoForm.idTurmaEnsino) estruturaTurmaEnsinoId.value = lancamentoForm.idTurmaEnsino
   erroLancamento.value = ''
 }
 
@@ -711,11 +968,126 @@ async function excluirLancamento(lancamento: CadernetaDigitalSummary) {
 function limparLancamentoForm() {
   editandoLancamentoId.value = null
   lancamentoForm.idAlunoUsuario = 0
+  lancamentoForm.idTipoEnsino = 0
+  lancamentoForm.idTurmaEnsino = 0
   lancamentoForm.idDisciplina = 0
   lancamentoForm.notas = [...EMPTY_NOTAS]
   lancamentoForm.presencas = 0
   lancamentoForm.faltas = 0
   erroLancamento.value = ''
+  preencherLancamentoPadrao()
+}
+
+function preencherSelecaoEstruturaPadrao() {
+  if (!estruturaEnsino.value.length) {
+    estruturaTipoEnsinoId.value = 0
+    estruturaTurmaEnsinoId.value = 0
+    return
+  }
+
+  if (!estruturaEnsino.value.some((tipo) => tipo.idTipoEnsino === estruturaTipoEnsinoId.value)) {
+    estruturaTipoEnsinoId.value = estruturaEnsino.value[0].idTipoEnsino
+  }
+
+  if (!estruturaTurmasSelecionadas.value.some((turma) => turma.idTurmaEnsino === estruturaTurmaEnsinoId.value)) {
+    estruturaTurmaEnsinoId.value = estruturaTurmasSelecionadas.value[0]?.idTurmaEnsino ?? 0
+  }
+}
+
+function preencherLancamentoPadrao() {
+  if (!estruturaEnsino.value.length) {
+    lancamentoForm.idTipoEnsino = 0
+    lancamentoForm.idTurmaEnsino = 0
+    lancamentoForm.idDisciplina = 0
+    return
+  }
+
+  if (!estruturaEnsino.value.some((tipo) => tipo.idTipoEnsino === lancamentoForm.idTipoEnsino)) {
+    lancamentoForm.idTipoEnsino = estruturaEnsino.value[0].idTipoEnsino
+  }
+
+  if (!turmasLancamento.value.some((turma) => turma.idTurmaEnsino === lancamentoForm.idTurmaEnsino)) {
+    lancamentoForm.idTurmaEnsino = turmasLancamento.value[0]?.idTurmaEnsino ?? 0
+  }
+
+  if (!lancamentoForm.idDisciplina || !disciplinaPertenceAoLancamento(lancamentoForm.idDisciplina)) {
+    lancamentoForm.idDisciplina = primeiraDisciplinaLancamento()?.idDisciplina ?? 0
+  }
+}
+
+function flattenDisciplinasEstrutura(tipos: TipoEnsinoCurricular[]) {
+  return tipos.flatMap((tipo) =>
+    tipo.turmas.flatMap((turma) =>
+      turma.areasConhecimento.flatMap((area) =>
+        area.disciplinas.map((disciplina) => mapDisciplinaCurricular(tipo, turma, area, disciplina))
+      )
+    )
+  )
+}
+
+function mapDisciplinaCurricular(
+  tipo: TipoEnsinoCurricular,
+  turma: TurmaEnsinoCurricular,
+  area: AreaConhecimentoCurricular,
+  disciplina: DisciplinaCurricular
+): DisciplinaOpcao {
+  return {
+    idDisciplina: disciplina.idDisciplina,
+    nome: disciplina.nome,
+    idTipoEnsino: tipo.idTipoEnsino,
+    nomeTipoEnsino: tipo.nome,
+    idTurmaEnsino: turma.idTurmaEnsino,
+    nomeTurmaEnsino: turma.nome,
+    idAreaConhecimento: area.idAreaConhecimento,
+    nomeAreaConhecimento: area.nome,
+    observacao: disciplina.observacao,
+    ofertaObrigatoria: disciplina.ofertaObrigatoria,
+    matriculaFacultativa: disciplina.matriculaFacultativa,
+    ordem: disciplina.ordem
+  }
+}
+
+function dedupeDisciplinas(items: DisciplinaOpcao[]) {
+  const map = new Map<number, DisciplinaOpcao>()
+
+  for (const item of items) {
+    if (!map.has(item.idDisciplina)) {
+      map.set(item.idDisciplina, item)
+    }
+  }
+
+  return Array.from(map.values()).sort((a, b) =>
+    (a.idTipoEnsino ?? 0) - (b.idTipoEnsino ?? 0)
+    || (a.idTurmaEnsino ?? 0) - (b.idTurmaEnsino ?? 0)
+    || (a.idAreaConhecimento ?? 0) - (b.idAreaConhecimento ?? 0)
+    || (a.ordem ?? 0) - (b.ordem ?? 0)
+    || a.nome.localeCompare(b.nome)
+  )
+}
+
+function disciplinaPertenceAoLancamento(idDisciplina: number) {
+  if (!idDisciplina) return true
+
+  return areasLancamento.value.some((area) =>
+    area.disciplinas.some((disciplina) => disciplina.idDisciplina === idDisciplina)
+  ) || disciplinasProfessorLancamento.value.some((disciplina) => disciplina.idDisciplina === idDisciplina)
+}
+
+function primeiraDisciplinaLancamento() {
+  return areasLancamento.value.flatMap((area) => area.disciplinas)[0]
+    ?? disciplinasProfessorLancamento.value[0]
+    ?? null
+}
+
+function obterDisciplinaOpcao(idDisciplina: number) {
+  return disciplinasDisponiveis.value.find((disciplina) => disciplina.idDisciplina === idDisciplina)
+}
+
+function formatarContextoEnsino(lancamento: CadernetaDigitalSummary) {
+  const partes = [lancamento.nomeTipoEnsino, lancamento.nomeTurmaEnsino]
+    .filter((parte): parte is string => Boolean(parte))
+
+  return partes.length ? partes.join(' - ') : 'Estrutura nao informada'
 }
 
 function salvarLancamentoPorEventoNativo(event: Event) {
