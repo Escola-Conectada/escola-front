@@ -1,83 +1,80 @@
 <template>
-  <section class="grid gap-5">
-    <article class="rounded-lg border border-[#d4dee9] bg-white/95 p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] backdrop-blur-sm sm:p-6">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
+  <section class="grid gap-4">
+    <article class="rounded-lg border border-[#d4dee9] bg-white/95 p-3 shadow-[0_22px_55px_rgba(14,30,53,0.08)] backdrop-blur-sm sm:p-4">
+      <div class="grid gap-3 xl:grid-cols-[minmax(180px,240px)_minmax(420px,1fr)_auto] xl:items-end">
+        <div class="min-w-0">
           <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Estrutura de ensino</p>
-          <h2 class="m-0 mt-2 text-xl font-normal text-[#071d3b]">Tipos, turmas e disciplinas</h2>
+          <h2 class="m-0 mt-1 truncate text-lg font-normal text-[#071d3b]">Tipos, turmas e disciplinas</h2>
         </div>
-        <span class="inline-flex w-fit items-center rounded-md border border-[#d4dee9] bg-[#f8fbfd] px-3 py-2 text-sm font-extrabold text-[#51627a]">
-          {{ carregandoEstrutura ? 'Carregando...' : `${estruturaEnsino.length} tipo(s)` }}
-        </span>
-      </div>
 
-      <div class="mt-5 grid gap-4 lg:grid-cols-[minmax(220px,280px)_minmax(220px,280px)_minmax(0,1fr)] lg:items-end">
-        <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
-          <span>Tipo do ensino</span>
-          <select
-            v-model.number="estruturaTipoEnsinoId"
-            class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
-            :disabled="!estruturaEnsino.length"
-          >
-            <option :value="0">Selecione</option>
-            <option v-for="tipo in estruturaEnsino" :key="tipo.idTipoEnsino" :value="tipo.idTipoEnsino">
-              {{ tipo.nome }}
-            </option>
-          </select>
-        </label>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="grid gap-1.5 text-xs font-extrabold text-[#071d3b]">
+            <span>Tipo do ensino</span>
+            <select
+              v-model.number="estruturaTipoEnsinoId"
+              class="min-h-10 rounded-md border border-[#ccd8e5] bg-white px-3 text-sm text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+              :disabled="!estruturaEnsino.length"
+            >
+              <option :value="0">Selecione</option>
+              <option v-for="tipo in estruturaEnsino" :key="tipo.idTipoEnsino" :value="tipo.idTipoEnsino">
+                {{ tipo.nome }}
+              </option>
+            </select>
+          </label>
 
-        <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
-          <span>Turma</span>
-          <select
-            v-model.number="estruturaTurmaEnsinoId"
-            class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
-            :disabled="!estruturaTurmasSelecionadas.length"
-          >
-            <option :value="0">Selecione</option>
-            <option v-for="turma in estruturaTurmasSelecionadas" :key="turma.idTurmaEnsino" :value="turma.idTurmaEnsino">
-              {{ turma.nome }} - {{ turma.codigo }}
-            </option>
-          </select>
-        </label>
+          <label class="grid gap-1.5 text-xs font-extrabold text-[#071d3b]">
+            <span>Turma</span>
+            <select
+              v-model.number="estruturaTurmaEnsinoId"
+              class="min-h-10 rounded-md border border-[#ccd8e5] bg-white px-3 text-sm text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+              :disabled="!estruturaTurmasSelecionadas.length"
+            >
+              <option :value="0">Selecione</option>
+              <option v-for="turma in estruturaTurmasSelecionadas" :key="turma.idTurmaEnsino" :value="turma.idTurmaEnsino">
+                {{ turma.nome }} - {{ turma.codigo }}
+              </option>
+            </select>
+          </label>
+        </div>
 
-        <div class="grid gap-3 rounded-md border border-[#d4dee9] bg-[#f8fbfd]/95 p-4 sm:grid-cols-3">
-          <div>
-            <span class="text-xs font-extrabold uppercase text-[#62728a]">Tipo</span>
-            <strong class="mt-1 block text-sm text-[#071d3b]">{{ estruturaTipoSelecionado?.nome || '-' }}</strong>
+        <div class="grid grid-cols-3 gap-2 rounded-md border border-[#d4dee9] bg-[#f8fbfd]/95 p-2">
+          <div class="min-w-0">
+            <span class="text-[11px] font-extrabold uppercase text-[#62728a]">Tipos</span>
+            <strong class="block truncate text-sm text-[#071d3b]">{{ carregandoEstrutura ? '...' : estruturaEnsino.length }}</strong>
           </div>
-          <div>
-            <span class="text-xs font-extrabold uppercase text-[#62728a]">Turmas</span>
-            <strong class="mt-1 block text-sm text-[#071d3b]">{{ totalTurmasEstruturaSelecionada }}</strong>
+          <div class="min-w-0">
+            <span class="text-[11px] font-extrabold uppercase text-[#62728a]">Turmas</span>
+            <strong class="block truncate text-sm text-[#071d3b]">{{ totalTurmasEstruturaSelecionada }}</strong>
           </div>
-          <div>
-            <span class="text-xs font-extrabold uppercase text-[#62728a]">Disciplinas</span>
-            <strong class="mt-1 block text-sm text-[#071d3b]">{{ totalDisciplinasEstruturaSelecionada }}</strong>
+          <div class="min-w-0">
+            <span class="text-[11px] font-extrabold uppercase text-[#62728a]">Disciplinas</span>
+            <strong class="block truncate text-sm text-[#071d3b]">{{ totalDisciplinasEstruturaSelecionada }}</strong>
           </div>
         </div>
       </div>
 
-      <p v-if="erroEstrutura" class="alert alert-error mt-4">{{ erroEstrutura }}</p>
+      <p v-if="erroEstrutura" class="alert alert-error mt-3">{{ erroEstrutura }}</p>
 
-      <div v-if="estruturaAreasSelecionadas.length" class="mt-5 grid gap-3 lg:grid-cols-2">
+      <div v-if="estruturaAreasSelecionadas.length" class="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-5">
         <article
           v-for="area in estruturaAreasSelecionadas"
           :key="area.idAreaConhecimento"
-          class="rounded-lg border border-[#d4dee9] bg-white p-4"
+          class="min-w-0 rounded-md border border-[#d4dee9] bg-white p-3"
         >
-          <div class="flex items-start justify-between gap-3">
+          <div class="flex items-center justify-between gap-2">
             <div class="min-w-0">
-              <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Area</p>
-              <h3 class="m-0 mt-1 break-words text-base font-extrabold text-[#071d3b]">{{ area.nome }}</h3>
+              <p class="m-0 text-[11px] font-extrabold uppercase text-[#d64200]">Area</p>
+              <h3 class="m-0 truncate text-sm font-extrabold text-[#071d3b]" :title="area.nome">{{ area.nome }}</h3>
             </div>
             <span class="shrink-0 rounded-md bg-[#edf3f8] px-2 py-1 text-xs font-extrabold text-[#51627a]">
               {{ area.disciplinas.length }}
             </span>
           </div>
-          <div class="mt-3 flex flex-wrap gap-2">
+          <div class="mt-2 flex max-h-16 flex-wrap gap-1.5 overflow-hidden">
             <span
               v-for="disciplina in area.disciplinas"
               :key="disciplina.idDisciplina"
-              class="rounded-md border border-[#cbdce8] bg-[#f8fbfd] px-2.5 py-1.5 text-xs font-extrabold text-[#243044]"
+              class="max-w-full truncate rounded-md border border-[#cbdce8] bg-[#f8fbfd] px-2 py-1 text-[11px] font-extrabold text-[#243044]"
               :title="disciplina.observacao || disciplina.nome"
             >
               {{ disciplina.nome }}
@@ -86,26 +83,26 @@
         </article>
       </div>
 
-      <p v-else-if="!carregandoEstrutura" class="mt-5 rounded-lg border border-[#d4dee9] bg-[#f8fbfd] p-4 text-sm font-semibold text-[#51627a]">
+      <p v-else-if="!carregandoEstrutura" class="mt-3 rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-3 text-sm font-semibold text-[#51627a]">
         Nenhuma estrutura curricular encontrada.
       </p>
     </article>
 
-    <div class="grid gap-5 xl:grid-cols-[minmax(320px,430px)_minmax(0,1fr)] xl:items-start">
-      <div v-if="podeAdministrar" class="grid gap-5">
+    <div class="grid gap-4 xl:grid-cols-[minmax(300px,400px)_minmax(0,1fr)] xl:items-start">
+      <div v-if="podeAdministrar" class="grid gap-4">
         <div
-          class="rounded-lg border border-[#d4dee9] bg-white/95 p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] backdrop-blur-sm sm:p-6"
+          class="rounded-lg border border-[#d4dee9] bg-white/95 p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] backdrop-blur-sm"
           @keydown.enter.prevent="salvarLancamento"
         >
           <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">{{ editandoLancamentoId ? 'Edicao' : 'Lancamento' }}</p>
-          <h2 class="mb-6 mt-2 text-xl font-normal text-[#071d3b]">Notas e frequencia</h2>
+          <h2 class="mb-4 mt-1 text-lg font-normal text-[#071d3b]">Notas e frequencia</h2>
 
-          <div class="grid gap-4">
-            <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
+          <div class="grid gap-3">
+            <label class="grid gap-1.5 text-sm font-extrabold text-[#071d3b]">
               <span>Aluno</span>
               <select
                 v-model.number="lancamentoForm.idAlunoUsuario"
-                class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+                class="min-h-10 rounded-md border border-[#ccd8e5] bg-white px-3 text-sm text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
                 required
               >
                 <option :value="0">Selecione</option>
@@ -116,11 +113,11 @@
             </label>
 
             <div class="grid gap-3 sm:grid-cols-2">
-              <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
+              <label class="grid gap-1.5 text-sm font-extrabold text-[#071d3b]">
                 <span>Tipo do ensino</span>
                 <select
                   v-model.number="lancamentoForm.idTipoEnsino"
-                  class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+                  class="min-h-10 rounded-md border border-[#ccd8e5] bg-white px-3 text-sm text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
                   required
                 >
                   <option :value="0">Selecione</option>
@@ -130,11 +127,11 @@
                 </select>
               </label>
 
-              <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
+              <label class="grid gap-1.5 text-sm font-extrabold text-[#071d3b]">
                 <span>Turma</span>
                 <select
                   v-model.number="lancamentoForm.idTurmaEnsino"
-                  class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+                  class="min-h-10 rounded-md border border-[#ccd8e5] bg-white px-3 text-sm text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
                   required
                   :disabled="!turmasLancamento.length"
                 >
@@ -146,11 +143,11 @@
               </label>
             </div>
 
-            <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
+            <label class="grid gap-1.5 text-sm font-extrabold text-[#071d3b]">
               <span>Disciplina</span>
               <select
                 v-model.number="lancamentoForm.idDisciplina"
-                class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+                class="min-h-10 rounded-md border border-[#ccd8e5] bg-white px-3 text-sm text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
                 required
                 :disabled="!areasLancamento.length && !disciplinasProfessorLancamento.length"
               >
@@ -168,18 +165,18 @@
               </select>
             </label>
 
-            <div v-if="disciplinaLancamentoSelecionada" class="grid gap-2 rounded-md border border-[#d4dee9] bg-[#f8fbfd]/95 p-3 text-sm">
+            <div v-if="disciplinaLancamentoSelecionada" class="flex flex-wrap gap-2 rounded-md border border-[#d4dee9] bg-[#f8fbfd]/95 p-2 text-xs font-semibold text-[#243044]">
               <span><strong>Area:</strong> {{ disciplinaLancamentoSelecionada.nomeAreaConhecimento || '-' }}</span>
               <span><strong>Turma:</strong> {{ disciplinaLancamentoSelecionada.nomeTurmaEnsino || turmaLancamentoSelecionada?.nome || '-' }}</span>
-              <span><strong>Oferta:</strong> {{ disciplinaLancamentoSelecionada.matriculaFacultativa ? 'Matricula facultativa' : 'Obrigatoria' }}</span>
+              <span><strong>Oferta:</strong> {{ disciplinaLancamentoSelecionada.matriculaFacultativa ? 'Facultativa' : 'Obrigatoria' }}</span>
             </div>
 
-            <div class="grid gap-3 sm:grid-cols-2">
-              <label v-for="(_, index) in lancamentoForm.notas" :key="index" class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
+            <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <label v-for="(_, index) in lancamentoForm.notas" :key="index" class="grid gap-1.5 text-sm font-extrabold text-[#071d3b]">
                 <span>Nota {{ index + 1 }}</span>
                 <input
                   v-model="lancamentoForm.notas[index]"
-                  class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+                  class="min-h-10 rounded-md border border-[#ccd8e5] bg-white px-2 text-sm text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
                   type="number"
                   min="0"
                   max="10"
@@ -189,21 +186,21 @@
             </div>
 
             <div class="grid gap-3 sm:grid-cols-2">
-              <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
+              <label class="grid gap-1.5 text-sm font-extrabold text-[#071d3b]">
                 <span>Presencas</span>
                 <input
                   v-model.number="lancamentoForm.presencas"
-                  class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+                  class="min-h-10 rounded-md border border-[#ccd8e5] bg-white px-3 text-sm text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
                   type="number"
                   min="0"
                   required
                 />
               </label>
-              <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
+              <label class="grid gap-1.5 text-sm font-extrabold text-[#071d3b]">
                 <span>Faltas</span>
                 <input
                   v-model.number="lancamentoForm.faltas"
-                  class="min-h-11 rounded-md border border-[#ccd8e5] bg-white px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+                  class="min-h-10 rounded-md border border-[#ccd8e5] bg-white px-3 text-sm text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
                   type="number"
                   min="0"
                   required
@@ -214,10 +211,10 @@
             <p v-if="erroLancamento" class="alert alert-error">{{ erroLancamento }}</p>
             <p v-if="mensagemLancamento" class="alert alert-success">{{ mensagemLancamento }}</p>
 
-            <div class="grid gap-2">
+            <div class="grid gap-2 sm:grid-cols-[1fr_auto]">
               <button
                 ref="salvarLancamentoButton"
-                class="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#147f72] px-4 text-sm font-extrabold text-white transition hover:bg-[#0f6c61] disabled:cursor-wait disabled:opacity-70"
+                class="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#147f72] px-4 text-sm font-extrabold text-white transition hover:bg-[#0f6c61] disabled:cursor-wait disabled:opacity-70"
                 type="button"
                 :disabled="salvandoLancamento"
                 @click.prevent.stop="salvarLancamento"
@@ -227,7 +224,7 @@
               </button>
               <button
                 v-if="editandoLancamentoId"
-                class="inline-flex min-h-10 items-center justify-center rounded-md border border-[#d4dee9] bg-white px-4 text-sm font-extrabold text-[#51627a] transition hover:bg-[#edf3f8]"
+                class="inline-flex min-h-11 items-center justify-center rounded-md border border-[#d4dee9] bg-white px-4 text-sm font-extrabold text-[#51627a] transition hover:bg-[#edf3f8]"
                 type="button"
                 @click="limparLancamentoForm"
               >
@@ -247,7 +244,7 @@
         <p class="m-0 text-sm font-semibold text-[#62728a]">{{ textoPermissao }}</p>
       </aside>
 
-      <article class="min-w-0 rounded-lg border border-[#d4dee9] bg-white/95 p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] backdrop-blur-sm sm:p-6">
+      <article class="min-w-0 rounded-lg border border-[#d4dee9] bg-white/95 p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] backdrop-blur-sm">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">{{ lancamentosVisiveis.length }} registro(s)</p>
@@ -264,7 +261,7 @@
           </button>
         </div>
 
-        <div class="mt-5 grid gap-3 xl:grid-cols-[minmax(0,1fr)_180px_160px_210px]">
+        <div class="mt-4 grid gap-3 xl:grid-cols-[minmax(0,1fr)_180px_160px_210px]">
           <div class="relative">
             <Search class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#62728a]" aria-hidden="true" />
             <input
@@ -314,7 +311,7 @@
           Nenhuma disciplina associada ao seu cadastro.
         </p>
 
-        <div class="mt-4 hidden max-h-[560px] overflow-auto rounded-lg border border-[#d4dee9] md:block">
+        <div class="mt-4 hidden max-h-[calc(100vh-390px)] min-h-[320px] overflow-auto rounded-lg border border-[#d4dee9] md:block">
           <div
             class="grid min-w-[980px] items-center gap-3 bg-[#f5f8fb] px-4 py-3 text-xs font-extrabold uppercase text-[#51627a]"
             :style="{ gridTemplateColumns: gradeCadernetaTemplate }"
