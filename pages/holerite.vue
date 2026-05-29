@@ -379,7 +379,7 @@ async function lancarHolerite() {
       method: 'POST',
       body: formData
     })
-    mensagem.value = 'Holerite lancado e notificacao enviada pela API.'
+    mensagem.value = 'Holerite lancado com sucesso. Professores notificados.'
     await carregarHolerites()
   } catch (err) {
     erro.value = normalizeApiError(err)
