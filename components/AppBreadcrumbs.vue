@@ -55,7 +55,7 @@ const items = computed<BreadcrumbItem[]>(() => {
   if (/^\/usuarios\/[^/]+$/.test(path)) {
     return [
       { label: 'Usuarios', to: '/usuarios' },
-      { label: 'Visualizar usuario' }
+      { label: route.query.editar === '1' || route.query.editar === 'true' ? 'Editar usuario' : 'Visualizar usuario' }
     ]
   }
 

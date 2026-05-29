@@ -317,6 +317,7 @@ const form = reactive<UsuarioForm>({
 })
 
 const usuarioId = computed(() => Number(route.params.id))
+const deveAbrirEditando = computed(() => route.query.editar === '1' || route.query.editar === 'true')
 const podeEditar = computed(() => usuario.value ? canEditUsuario(auth.usuario, usuario.value) : false)
 const podeExcluir = computed(() => usuario.value ? canDeleteUsuario(auth.usuario) : false)
 const fotoUsuarioUrl = computed(() =>
@@ -362,6 +363,7 @@ const tituloPagina = computed(() => {
 
 onMounted(async () => {
   await carregar()
+  aplicarModoEdicaoDaRota()
 
   if (canChangeUsuarioPerfil(auth.usuario)) {
     try {
@@ -376,6 +378,10 @@ onMounted(async () => {
   } catch {
     usuarios.value = usuario.value ? [usuario.value] : []
   }
+})
+
+watch(() => route.query.editar, () => {
+  aplicarModoEdicaoDaRota()
 })
 
 onBeforeUnmount(() => {
@@ -453,12 +459,22 @@ function preencherForm(value: UsuarioSummary) {
   form.idPerfil = value.idPerfil
 }
 
-function cancelar() {
+async function cancelar() {
   if (usuario.value) {
     preencherForm(usuario.value)
   }
 
   editando.value = false
+
+  if (deveAbrirEditando.value) {
+    await navigateTo(`/usuarios/${usuarioId.value}`, { replace: true })
+  }
+}
+
+function aplicarModoEdicaoDaRota() {
+  if (deveAbrirEditando.value && podeEditar.value) {
+    editando.value = true
+  }
 }
 
 function selecionarFoto(event: Event) {
@@ -736,6 +752,9 @@ async function salvar() {
     }
     mensagem.value = 'Usuario atualizado.'
     editando.value = false
+    if (deveAbrirEditando.value) {
+      await navigateTo(`/usuarios/${usuarioId.value}`, { replace: true })
+    }
   } catch (err) {
     erro.value = normalizeApiError(err)
   } finally {
