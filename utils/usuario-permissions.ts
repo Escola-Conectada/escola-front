@@ -16,7 +16,7 @@ export function getUsuarioPerfilTipo(descricaoPerfil?: string | null): UsuarioPe
   if (!perfil) return 'desconhecido'
   if (perfil.includes('administrador')) return 'administrador'
   if (perfil.includes('diretoria') || perfil.includes('diretor')) return 'diretoria'
-  if (perfil.includes('professor') || perfil.includes('contribuinte')) return 'professor'
+  if (perfil.includes('professor') || perfil.includes('docente') || perfil.includes('contribuinte')) return 'professor'
   if (perfil.includes('aluno')) return 'aluno'
 
   return 'desconhecido'
@@ -70,7 +70,11 @@ export function formatPerfilLabel(descricaoPerfil?: string | null) {
   const tipo = getUsuarioPerfilTipo(descricaoPerfil)
 
   if (tipo === 'administrador' || tipo === 'diretoria') {
-    return 'Membro da Diretoria / Administrador'
+    return 'Diretoria'
+  }
+
+  if (tipo === 'professor') {
+    return 'Docentes'
   }
 
   return descricaoPerfil || 'Perfil'

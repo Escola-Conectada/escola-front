@@ -48,6 +48,7 @@ const perfis: Perfil[] = [
 describe('usuario-permissions', () => {
   it('classifies profile descriptions with aliases', () => {
     expect(getUsuarioPerfilTipo('Membro da Diretoria')).toBe('diretoria')
+    expect(getUsuarioPerfilTipo('Docentes')).toBe('professor')
     expect(getUsuarioPerfilTipo('Contribuinte')).toBe('professor')
     expect(getUsuarioPerfilTipo('Aluno')).toBe('aluno')
   })
@@ -83,12 +84,17 @@ describe('usuario-permissions', () => {
     expect(filterPerfisForUsuarioCreation(perfis, aluno)).toEqual([])
   })
 
-  it('formats admin and board profiles as the requested option label', () => {
-    expect(formatPerfilLabel('Administrador')).toBe('Membro da Diretoria / Administrador')
+  it('formats profile names as the requested option labels', () => {
+    expect(formatPerfilLabel('Administrador')).toBe('Diretoria')
+    expect(formatPerfilLabel('Membro da Diretoria')).toBe('Diretoria')
+    expect(formatPerfilLabel('Professor')).toBe('Docentes')
+    expect(formatPerfilLabel('Aluno')).toBe('Aluno')
   })
 
   it('maps displayed profile descriptions to API user types', () => {
+    expect(getTipoUsuarioForApi('Diretoria')).toBe('Administrador')
     expect(getTipoUsuarioForApi('Membro da Diretoria')).toBe('Administrador')
+    expect(getTipoUsuarioForApi('Docentes')).toBe('Professor')
     expect(getTipoUsuarioForApi('Professor')).toBe('Professor')
     expect(getTipoUsuarioForApi('Aluno')).toBe('Aluno')
     expect(getTipoUsuarioForApiByPerfilId(perfis, 2)).toBe('Professor')
