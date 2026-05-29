@@ -45,6 +45,24 @@
         />
 
         <label>
+          <span>Nome da mae</span>
+          <input v-model.trim="form.nomeMae" type="text" :maxlength="USER_TEXT_FIELD_MAX_LENGTH" autocomplete="off" />
+          <span class="text-xs font-extrabold text-slate-500">{{ form.nomeMae.length }}/{{ USER_TEXT_FIELD_MAX_LENGTH }}</span>
+        </label>
+
+        <label>
+          <span>Nome do pai</span>
+          <input v-model.trim="form.nomePai" type="text" :maxlength="USER_TEXT_FIELD_MAX_LENGTH" autocomplete="off" />
+          <span class="text-xs font-extrabold text-slate-500">{{ form.nomePai.length }}/{{ USER_TEXT_FIELD_MAX_LENGTH }}</span>
+        </label>
+
+        <label class="md:col-span-2">
+          <span>Endereco</span>
+          <input v-model.trim="form.endereco" type="text" :maxlength="ADDRESS_FIELD_MAX_LENGTH" autocomplete="street-address" />
+          <span class="text-xs font-extrabold text-slate-500">{{ form.endereco.length }}/{{ ADDRESS_FIELD_MAX_LENGTH }}</span>
+        </label>
+
+        <label>
           <span>Tipo de usuario</span>
           <select v-model.number="form.idPerfil" required :disabled="perfisDisponiveis.length <= 1">
             <option disabled :value="0">Selecione</option>
@@ -104,7 +122,8 @@ const perfis = ref<Perfil[]>([])
 const usuarios = ref<UsuarioSummary[]>([])
 const salvando = ref(false)
 const erro = ref('')
-const USER_TEXT_FIELD_MAX_LENGTH = 50
+const USER_TEXT_FIELD_MAX_LENGTH = 100
+const ADDRESS_FIELD_MAX_LENGTH = 200
 const PHONE_FORMAT_ERROR = 'Informe um telefone valido no formato +55 (xx) xxxxx-xxxx.'
 const REQUIRED_FIELDS_ERROR = 'Nome, e-mail e telefone sao obrigatorios.'
 const REQUIRED_PROFILE_ERROR = 'Informe o tipo de usuario.'
@@ -113,6 +132,9 @@ const form = reactive<UsuarioForm>({
   email: '',
   telefone: '',
   dataNascimento: '',
+  nomeMae: '',
+  nomePai: '',
+  endereco: '',
   idPerfil: 0
 })
 const podeCadastrar = computed(() => canCreateAlunoUsuarios(auth.perfil))
@@ -178,6 +200,9 @@ function montarPayload(): UsuarioCreate {
     email: form.email.trim(),
     telefone: normalizeBrazilPhoneForApi(form.telefone),
     dataNascimento: form.dataNascimento || null,
+    nomeMae: form.nomeMae.trim() || null,
+    nomePai: form.nomePai.trim() || null,
+    endereco: form.endereco.trim() || null,
     tipoUsuario: getTipoUsuarioForApiByPerfilId(perfisDisponiveis.value, form.idPerfil)
   }
 }

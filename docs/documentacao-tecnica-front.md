@@ -144,6 +144,7 @@ Rotas:
 - `/usuarios`
 - `/usuarios/novo`
 - `/usuarios/:id`
+- `/comunicados`
 
 Funcionalidades:
 
@@ -154,16 +155,17 @@ Funcionalidades:
 - Upload, download e exclusao de certificados PDF.
 - Popup de contatos.
 - Popup de documentos.
-- Envio manual de notificacao administrativa para todos os perfis.
-- Campo `dataNascimento` com DatePicker.
+- Card administrativo no painel para acessar `/comunicados`.
+- Envio manual de comunicados para alunos e professores.
+- Campos `dataNascimento`, `nomeMae`, `nomePai` e `endereco`.
 
-Campo de aniversario:
+Campos cadastrais:
 
 - Componente: `components/DatePicker.vue`.
 - Entrada digitavel: `dd/mm/aaaa`.
 - Valor salvo no estado/payload: `yyyy-mm-dd`.
-- Valor vazio enviado como `null`.
-- Requer suporte do backend para persistencia definitiva.
+- Valores vazios opcionais enviados como `null`.
+- Campos de responsaveis e endereco ficam nos formularios `/usuarios`, `/usuarios/novo` e `/usuarios/:id`.
 
 ### 7.4 Caderneta Digital
 
@@ -176,6 +178,7 @@ Funcionalidades:
 - Consulta por disciplina.
 - Professores administram lancamentos.
 - Alunos visualizam apenas registros associados ao proprio cadastro.
+- A listagem exibe um icone de aprendizado; notas, media e situacao ficam em popup para evitar quebra de linhas.
 
 ### 7.5 Notificacoes
 
@@ -189,7 +192,7 @@ Funcionalidades:
 - Marcar notificacao como lida.
 - Marcar todas como lidas.
 - Quebra de mensagens longas, URLs de fotos e URLs de PDFs sem overflow horizontal.
-- Envio para todos os perfis via `POST /notificacoes/perfis`, usado por administradores no envio manual.
+- Envio administrativo para alunos e professores via `POST /notificacoes/perfis`, usando `tiposUsuario: ["Aluno", "Professor"]`.
 
 ### 7.6 QR Code bancario ficticio
 
@@ -344,6 +347,7 @@ Principais interfaces:
 Campo novo:
 
 - `dataNascimento?: string | null` em usuarios.
+- `nomeMae?: string | null`, `nomePai?: string | null` e `endereco?: string | null` em usuarios.
 
 Funcionalidades locais sem contrato de API:
 
@@ -420,12 +424,11 @@ Docker:
 
 ## 15. Pendencias e integracoes futuras
 
-1. Persistir `dataNascimento` no backend.
-2. Criar `PUT`/`DELETE` para eventos escolares institucionais caso seja necessario editar ou excluir eventos ja lancados.
-3. Criar endpoint de preferencias de usuario caso a ordenacao drag and drop do painel precise sincronizar entre dispositivos.
-4. Criar endpoints de envio real de holerite por e-mail/WhatsApp caso seja necessario envio server-side com anexo/auditoria.
-5. Opcionalmente criar envio real de e-mail/WhatsApp para QR Code.
-6. Opcionalmente mover feriados para endpoint configuravel, caso haja feriados estaduais/municipais.
+1. Criar `PUT`/`DELETE` para eventos escolares institucionais caso seja necessario editar ou excluir eventos ja lancados.
+2. Criar endpoint de preferencias de usuario caso a ordenacao drag and drop do painel precise sincronizar entre dispositivos.
+3. Criar endpoints de envio real de holerite por e-mail/WhatsApp caso seja necessario envio server-side com anexo/auditoria.
+4. Opcionalmente criar envio real de e-mail/WhatsApp para QR Code.
+5. Opcionalmente mover feriados para endpoint configuravel, caso haja feriados estaduais/municipais.
 
 ## 16. Manutencao
 

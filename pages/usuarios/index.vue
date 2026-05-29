@@ -50,6 +50,24 @@
         />
 
         <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
+          <span>Nome da mae</span>
+          <input v-model.trim="form.nomeMae" class="min-h-11 rounded-md border border-[#ccd8e5] px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10" type="text" :maxlength="USER_TEXT_FIELD_MAX_LENGTH" autocomplete="off" />
+          <span class="text-xs font-extrabold text-[#62728a]">{{ form.nomeMae.length }}/{{ USER_TEXT_FIELD_MAX_LENGTH }}</span>
+        </label>
+
+        <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
+          <span>Nome do pai</span>
+          <input v-model.trim="form.nomePai" class="min-h-11 rounded-md border border-[#ccd8e5] px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10" type="text" :maxlength="USER_TEXT_FIELD_MAX_LENGTH" autocomplete="off" />
+          <span class="text-xs font-extrabold text-[#62728a]">{{ form.nomePai.length }}/{{ USER_TEXT_FIELD_MAX_LENGTH }}</span>
+        </label>
+
+        <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
+          <span>Endereco</span>
+          <input v-model.trim="form.endereco" class="min-h-11 rounded-md border border-[#ccd8e5] px-3 text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10" type="text" :maxlength="ADDRESS_FIELD_MAX_LENGTH" autocomplete="street-address" />
+          <span class="text-xs font-extrabold text-[#62728a]">{{ form.endereco.length }}/{{ ADDRESS_FIELD_MAX_LENGTH }}</span>
+        </label>
+
+        <label class="grid gap-2 text-sm font-extrabold text-[#071d3b]">
           <span>Tipo de usuario</span>
           <select
             v-model.number="form.idPerfil"
@@ -507,6 +525,11 @@
             <Phone class="h-5 w-5 shrink-0" aria-hidden="true" />
             <span class="text-sm font-extrabold">{{ telefoneContatoFormatado }}</span>
           </a>
+          <div class="grid min-w-0 gap-2 rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-3 text-sm font-semibold text-[#51627a]">
+            <span><strong class="text-[#071d3b]">Mae:</strong> {{ usuarioContatoPopup.nomeMae || '-' }}</span>
+            <span><strong class="text-[#071d3b]">Pai:</strong> {{ usuarioContatoPopup.nomePai || '-' }}</span>
+            <span class="break-words"><strong class="text-[#071d3b]">Endereco:</strong> {{ usuarioContatoPopup.endereco || '-' }}</span>
+          </div>
         </div>
       </article>
     </div>
@@ -626,7 +649,8 @@ const certificadoSelecionado = ref<File | null>(null)
 const fotoPreviewUrl = ref('')
 const porPagina = 10
 const editandoId = ref<number | null>(null)
-const USER_TEXT_FIELD_MAX_LENGTH = 50
+const USER_TEXT_FIELD_MAX_LENGTH = 100
+const ADDRESS_FIELD_MAX_LENGTH = 200
 const PHONE_FORMAT_ERROR = 'Informe um telefone valido no formato +55 (xx) xxxxx-xxxx.'
 const REQUIRED_FIELDS_ERROR = 'Nome, e-mail e telefone sao obrigatorios.'
 const REQUIRED_PROFILE_ERROR = 'Informe o tipo de usuario.'
@@ -639,6 +663,9 @@ const form = reactive<UsuarioForm>({
   email: '',
   telefone: '',
   dataNascimento: '',
+  nomeMae: '',
+  nomePai: '',
+  endereco: '',
   idPerfil: 0
 })
 
@@ -721,7 +748,7 @@ const usuariosFiltrados = computed(() => {
   if (!termo) return usuariosDoPerfil
 
   return usuariosDoPerfil.filter((usuario) =>
-    [usuario.nome, usuario.email, usuario.telefone, formatBrazilPhone(usuario.telefone), usuario.descricaoPerfil, formatPerfilLabel(usuario.descricaoPerfil)]
+    [usuario.nome, usuario.email, usuario.telefone, formatBrazilPhone(usuario.telefone), usuario.nomeMae, usuario.nomePai, usuario.endereco, usuario.descricaoPerfil, formatPerfilLabel(usuario.descricaoPerfil)]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(termo))
   )
@@ -963,6 +990,9 @@ function editar(usuario: UsuarioSummary) {
   form.email = usuario.email
   form.telefone = formatBrazilPhone(usuario.telefone)
   form.dataNascimento = usuario.dataNascimento?.slice(0, 10) ?? ''
+  form.nomeMae = usuario.nomeMae ?? ''
+  form.nomePai = usuario.nomePai ?? ''
+  form.endereco = usuario.endereco ?? ''
   form.idPerfil = usuario.idPerfil
   mensagem.value = ''
   erro.value = ''
@@ -976,6 +1006,9 @@ function limparForm() {
   form.email = ''
   form.telefone = ''
   form.dataNascimento = ''
+  form.nomeMae = ''
+  form.nomePai = ''
+  form.endereco = ''
   form.idPerfil = getDefaultPerfilId(perfis.value, auth.usuario)
   notificacaoForm.titulo = ''
   notificacaoForm.mensagem = ''
@@ -1071,7 +1104,10 @@ function montarPayload(): UsuarioCreate | UsuarioUpdate {
     nome: form.nome.trim(),
     email: form.email.trim(),
     telefone: normalizeBrazilPhoneForApi(form.telefone),
-    dataNascimento: form.dataNascimento || null
+    dataNascimento: form.dataNascimento || null,
+    nomeMae: form.nomeMae.trim() || null,
+    nomePai: form.nomePai.trim() || null,
+    endereco: form.endereco.trim() || null
   }
 
   if (!editandoId.value || canChangeUsuarioPerfil(auth.usuario)) {

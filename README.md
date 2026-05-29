@@ -130,6 +130,7 @@ flowchart TD
 
   P --> US[/usuarios]
   P --> CD[/caderneta-digital]
+  P --> CO[/comunicados]
   P --> CE[/calendario-escolar]
   P --> QR[/qr-code-bancario]
   P --> HO[/holerite]
@@ -150,6 +151,7 @@ flowchart TD
 | `/usuarios/novo` | Cadastro dedicado de usuario |
 | `/usuarios/:id` | Visualizacao, edicao e exclusao de usuario conforme perfil |
 | `/caderneta-digital` | Cadastro de disciplinas, lancamento de notas/frequencia e consulta da caderneta |
+| `/comunicados` | Envio administrativo de comunicados para alunos e professores |
 | `/calendario-escolar` | Calendario anual, feriados nacionais, eventos escolares e agenda de avaliacoes/trabalhos |
 | `/qr-code-bancario` | Geracao de QR Code com dados bancarios ficticios, exclusiva para aluno |
 | `/holerite` | Consulta e lancamento de holerites, exclusivo para professor e administrador |
@@ -160,7 +162,7 @@ A sessao autenticada guarda usuario, token JWT, data de expiracao e flag de senh
 
 Os perfis reconhecidos no front sao:
 
-- `Administrador`: acesso completo a usuarios, notificacoes para todos os perfis, consulta geral, documentos permitidos, eventos escolares e lancamento/consulta de holerites.
+- `Administrador`: acesso completo a usuarios, comunicados para alunos e professores, consulta geral, documentos permitidos, eventos escolares e lancamento/consulta de holerites.
 - `Membro da Diretoria`: acesso completo a usuarios, notificacoes, consulta geral e documentos permitidos.
 - `Professor`: consulta usuarios permitidos, administra caderneta, agenda avaliacoes/trabalhos, consulta documentos conforme regra, edita dados permitidos e visualiza seus proprios holerites.
 - `Aluno`: consulta o proprio cadastro, caderneta, calendario escolar e QR Code ficticio.
@@ -175,6 +177,7 @@ Matriz resumida:
 | Foto de perfil | Edita conforme permissao | Edita conforme permissao | Edita conforme permissao | Edita propria foto quando permitido |
 | Certificados PDF | Consulta/gerencia conforme regra | Consulta/gerencia conforme regra | Consulta/gerencia conforme regra | Consulta conforme regra |
 | Caderneta Digital | Consulta | Consulta | Administra disciplinas, notas e frequencia | Consulta dados associados |
+| Comunicados | Envia para alunos e professores | Nao acessa | Nao acessa | Nao acessa |
 | Calendario Escolar | Lanca eventos escolares e consulta | Consulta | Marca avaliacoes e trabalhos | Consulta somente leitura |
 | QR Code ficticio | Nao acessa | Nao acessa | Nao acessa | Gera |
 | Holerite | Lanca, consulta, exporta, envia e exclui | Nao acessa | Consulta, exporta e envia os proprios | Nao acessa |
@@ -200,12 +203,13 @@ O modulo de usuarios permite cadastrar, listar, filtrar, editar e excluir confor
 - E-mail.
 - Telefone com mascara brasileira `+55 (xx) xxxxx-xxxx`.
 - Data de aniversario com `DatePicker`.
+- Nome da mae, nome do pai e endereco.
 - Tipo de usuario.
 - Foto de perfil.
 - Certificados PDF para professores, quando permitido.
-- Envio manual de notificacoes administrativas para todos os perfis.
+- Envio manual de comunicados administrativos para alunos e professores.
 
-O campo `dataNascimento` e enviado como `yyyy-mm-dd` ou `null`. Para persistencia definitiva, o backend precisa aceitar esse campo nos DTOs de criacao/edicao e retornar o valor nas consultas.
+Os campos `dataNascimento`, `nomeMae`, `nomePai` e `endereco` sao enviados ao backend nos DTOs de criacao/edicao e retornados nas consultas de usuario.
 
 ### Caderneta Digital
 
@@ -213,14 +217,14 @@ Disponivel em `/caderneta-digital`.
 
 - Professores administram disciplinas.
 - Professores lancam notas, presencas e faltas.
-- A situacao e exibida com base nos dados retornados pela API.
+- Notas, media e situacao ficam em um popup de aprendizado acionado por icone na listagem.
 - Alunos visualizam apenas registros associados ao proprio cadastro.
 
 ### Notificacoes
 
 O layout principal carrega notificacoes via API, exibe contador de nao lidas, permite abrir detalhes, marcar uma notificacao como lida e marcar todas como lidas.
 
-Administradores podem enviar notificacoes para todos os perfis pelo endpoint `POST /notificacoes/perfis`.
+Administradores podem enviar comunicados para alunos e professores pelo endpoint `POST /notificacoes/perfis`, usando `tiposUsuario: ["Aluno", "Professor"]`.
 
 Mensagens longas, URLs de fotos e URLs de PDF sao quebradas dentro do popup para evitar rolagem horizontal.
 
@@ -410,7 +414,6 @@ Fluxo do Dockerfile:
 
 As funcionalidades abaixo ja possuem front, mas precisam de apoio do backend para uso persistente/multiusuario:
 
-- Persistir `dataNascimento` nos DTOs e modelos de usuario.
 - Endpoints `PUT`/`DELETE` para eventos escolares institucionais, caso seja necessario editar ou excluir eventos ja lancados.
 - Endpoint de preferencias de usuario, caso a ordenacao drag and drop do painel precise sincronizar entre dispositivos.
 - Envio real server-side de e-mail/WhatsApp para holerite com anexo, auditoria e fila de envio, caso seja necessario sair do compartilhamento via cliente externo.

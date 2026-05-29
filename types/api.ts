@@ -4,6 +4,9 @@ export interface UsuarioSummary {
   email: string
   telefone: string
   dataNascimento?: string | null
+  nomeMae?: string | null
+  nomePai?: string | null
+  endereco?: string | null
   fotoPerfilUrl?: string | null
   idPerfil: number
   descricaoPerfil: string
@@ -15,6 +18,9 @@ export interface UsuarioForm {
   email: string
   telefone: string
   dataNascimento: string
+  nomeMae: string
+  nomePai: string
+  endereco: string
   idPerfil: number
 }
 
@@ -23,6 +29,9 @@ export interface UsuarioCreate {
   email: string
   telefone: string
   dataNascimento?: string | null
+  nomeMae?: string | null
+  nomePai?: string | null
+  endereco?: string | null
   tipoUsuario: string
 }
 
@@ -31,6 +40,9 @@ export interface UsuarioUpdate {
   email: string
   telefone: string
   dataNascimento?: string | null
+  nomeMae?: string | null
+  nomePai?: string | null
+  endereco?: string | null
   tipoUsuario?: string
 }
 

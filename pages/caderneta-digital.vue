@@ -237,9 +237,7 @@
         >
           <span>Aluno</span>
           <span>Disciplina</span>
-          <span>Notas</span>
-          <span>Media</span>
-          <span>Situacao</span>
+          <span class="text-center">Aprendizado</span>
           <span>Frequencia</span>
           <span v-if="podeAdministrar" class="text-center">Acoes</span>
         </div>
@@ -255,11 +253,17 @@
             <span class="mt-1 block break-all text-xs font-semibold text-[#51627a]">{{ lancamento.emailAluno }}</span>
           </div>
           <span class="min-w-0 break-words font-semibold text-[#243044]">{{ lancamento.nomeDisciplina }}</span>
-          <span class="whitespace-pre-line text-[#243044]">{{ formatNotasQuebradas(lancamento.notas) }}</span>
-          <span class="font-semibold text-[#243044]">{{ formatarMediaLancamento(lancamento.mediaAritmetica) }}</span>
-          <span class="font-extrabold" :class="situacaoCadernetaClass(lancamento)">
-            {{ lancamento.situacao }}
-          </span>
+          <div class="flex justify-center">
+            <button
+              class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
+              type="button"
+              title="Ver aprendizado"
+              aria-label="Ver aprendizado"
+              @click="abrirAprendizado(lancamento)"
+            >
+              <GraduationCap class="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
           <span class="text-[#243044]">
             <strong>{{ lancamento.presencas }}</strong> presencas<br />
             <strong>{{ lancamento.faltas }}</strong> faltas
@@ -310,14 +314,14 @@
             </span>
           </div>
           <div class="mt-3 grid gap-2 text-sm text-[#243044]">
-            <span><strong>Notas:</strong> {{ formatNotas(lancamento.notas) }}</span>
-            <span><strong>Media:</strong> {{ formatarMediaLancamento(lancamento.mediaAritmetica) }}</span>
-            <span>
-              <strong>Situacao:</strong>
-              <span class="font-extrabold" :class="situacaoCadernetaClass(lancamento)">
-                {{ lancamento.situacao }}
-              </span>
-            </span>
+            <button
+              class="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[#edf3f8] px-3 text-sm font-extrabold text-[#071d3b] transition hover:bg-[#dfe8f1]"
+              type="button"
+              @click="abrirAprendizado(lancamento)"
+            >
+              <GraduationCap class="h-5 w-5" aria-hidden="true" />
+              Aprendizado
+            </button>
             <span><strong>Presencas:</strong> {{ lancamento.presencas }}</span>
             <span><strong>Faltas:</strong> {{ lancamento.faltas }}</span>
           </div>
@@ -351,11 +355,55 @@
         </p>
       </div>
     </article>
+
+    <div
+      v-if="lancamentoAprendizadoPopup"
+      class="fixed inset-0 z-40 grid place-items-center bg-[#071d3b]/50 px-4 py-6"
+      @click.self="fecharAprendizado"
+    >
+      <article class="grid w-full max-w-lg gap-4 rounded-lg bg-white p-5 shadow-[0_22px_55px_rgba(14,30,53,0.24)]">
+        <div class="flex items-start justify-between gap-4">
+          <div class="min-w-0">
+            <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Aprendizado</p>
+            <h2 class="m-0 mt-1 break-words text-xl font-normal text-[#071d3b]">{{ lancamentoAprendizadoPopup.nomeAluno }}</h2>
+            <p class="m-0 mt-1 break-words text-sm font-semibold text-[#62728a]">{{ lancamentoAprendizadoPopup.nomeDisciplina }}</p>
+          </div>
+          <button
+            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
+            type="button"
+            title="Fechar"
+            aria-label="Fechar"
+            @click="fecharAprendizado"
+          >
+            <X class="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+
+        <div class="grid gap-3">
+          <div class="rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-4">
+            <span class="text-xs font-extrabold uppercase text-[#62728a]">Notas</span>
+            <strong class="mt-2 block break-words text-[#071d3b]">{{ formatNotas(lancamentoAprendizadoPopup.notas) }}</strong>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div class="rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-4">
+              <span class="text-xs font-extrabold uppercase text-[#62728a]">Media</span>
+              <strong class="mt-2 block text-[#071d3b]">{{ formatarMediaLancamento(lancamentoAprendizadoPopup.mediaAritmetica) }}</strong>
+            </div>
+            <div class="rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-4">
+              <span class="text-xs font-extrabold uppercase text-[#62728a]">Situacao</span>
+              <strong class="mt-2 block" :class="situacaoCadernetaClass(lancamentoAprendizadoPopup)">
+                {{ lancamentoAprendizadoPopup.situacao }}
+              </strong>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { BookOpen, ClipboardCheck, Pencil, RefreshCcw, Search, Trash2 } from '@lucide/vue'
+import { BookOpen, ClipboardCheck, GraduationCap, Pencil, RefreshCcw, Search, Trash2, X } from '@lucide/vue'
 import type {
   CadernetaDigitalPayload,
   CadernetaDigitalSummary,
@@ -393,6 +441,7 @@ const disciplinaFiltro = ref(0)
 const editandoDisciplinaId = ref<number | null>(null)
 const editandoLancamentoId = ref<number | null>(null)
 const salvarLancamentoButton = ref<HTMLButtonElement | null>(null)
+const lancamentoAprendizadoPopup = ref<CadernetaDigitalSummary | null>(null)
 const disciplinaForm = reactive({
   nome: ''
 })
@@ -407,8 +456,8 @@ const lancamentoForm = reactive({
 const podeAdministrar = computed(() => auth.isProfessor)
 const gradeCadernetaTemplate = computed(() =>
   podeAdministrar.value
-    ? 'minmax(120px, 1.35fr) minmax(86px, 0.75fr) minmax(58px, 0.55fr) minmax(52px, 0.42fr) minmax(88px, 0.7fr) minmax(82px, 0.62fr) 88px'
-    : 'minmax(120px, 1.4fr) minmax(86px, 0.8fr) minmax(58px, 0.55fr) minmax(52px, 0.42fr) minmax(88px, 0.72fr) minmax(82px, 0.62fr)'
+    ? 'minmax(140px, 1.5fr) minmax(100px, 0.9fr) 110px minmax(90px, 0.75fr) 88px'
+    : 'minmax(140px, 1.6fr) minmax(100px, 0.95fr) 110px minmax(90px, 0.75fr)'
 )
 const alunosDisponiveis = computed(() =>
   usuarios.value.filter((usuario) => isPerfilAluno(usuario.descricaoPerfil))
@@ -667,15 +716,17 @@ function removerEventoNativoLancamento() {
   salvarLancamentoButton.value?.removeEventListener('click', salvarLancamentoPorEventoNativo)
 }
 
+function abrirAprendizado(lancamento: CadernetaDigitalSummary) {
+  lancamentoAprendizadoPopup.value = lancamento
+}
+
+function fecharAprendizado() {
+  lancamentoAprendizadoPopup.value = null
+}
+
 function formatNotas(notas: number[]) {
   return notas.length
     ? notas.map((nota) => nota.toLocaleString('pt-BR', { maximumFractionDigits: 1 })).join(' / ')
-    : '-'
-}
-
-function formatNotasQuebradas(notas: number[]) {
-  return notas.length
-    ? notas.map((nota) => nota.toLocaleString('pt-BR', { maximumFractionDigits: 1 })).join('\n')
     : '-'
 }
 
