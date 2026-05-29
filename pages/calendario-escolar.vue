@@ -1,101 +1,8 @@
 <template>
-  <section class="grid gap-5">
-    <div class="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
-      <article class="min-w-0 rounded-lg border border-[#d4dee9] bg-white p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] sm:p-6">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Calendario</p>
-            <h2 class="m-0 mt-2 text-xl font-normal text-[#071d3b]">{{ selectedYear }}</h2>
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <button
-              class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
-              type="button"
-              title="Ano anterior"
-              aria-label="Ano anterior"
-              @click="mudarAno(-1)"
-            >
-              <ChevronLeft class="h-5 w-5" aria-hidden="true" />
-            </button>
-            <button
-              class="inline-flex min-h-10 items-center justify-center rounded-md border border-[#d4dee9] bg-white px-3 text-sm font-extrabold text-[#51627a] transition hover:bg-[#edf3f8]"
-              type="button"
-              @click="selecionarHoje"
-            >
-              Hoje
-            </button>
-            <button
-              class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
-              type="button"
-              title="Proximo ano"
-              aria-label="Proximo ano"
-              @click="mudarAno(1)"
-            >
-              <ChevronRight class="h-5 w-5" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-
-        <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          <button
-            v-for="month in months"
-            :key="month.index"
-            class="grid min-w-0 gap-2 rounded-lg border p-3 text-left transition hover:border-[#147f72] hover:shadow-[0_12px_30px_rgba(20,127,114,0.10)]"
-            :class="month.index === selectedMonth ? 'border-[#147f72] bg-[#f0faf8]' : 'border-[#d4dee9] bg-white'"
-            type="button"
-            @click="selecionarMes(month.index)"
-          >
-            <div class="flex items-center justify-between gap-2">
-              <strong class="text-sm text-[#071d3b]">{{ month.label }}</strong>
-              <span
-                v-if="feriadosPorMes(month.index).length"
-                class="rounded-md bg-[#fff3e8] px-2 py-1 text-xs font-extrabold text-[#b45309]"
-              >
-                {{ feriadosPorMes(month.index).length }}
-              </span>
-            </div>
-            <div class="grid grid-cols-7 gap-1 text-center">
-              <span
-                v-for="day in diasSemanaCurtos"
-                :key="day"
-                class="py-1 text-[11px] font-extrabold uppercase text-[#7a8798]"
-              >
-                {{ day }}
-              </span>
-              <span
-                v-for="day in gradeMes(month.index)"
-                :key="day.iso"
-                class="grid h-7 place-items-center rounded text-xs font-extrabold"
-                :class="miniDiaClasses(day)"
-              >
-                {{ day.date.getDate() }}
-              </span>
-            </div>
-          </button>
-        </div>
-      </article>
-
-      <aside class="min-w-0 rounded-lg border border-[#d4dee9] bg-white p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] sm:p-6">
-        <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Feriados nacionais</p>
-        <h2 class="m-0 mt-2 text-xl font-normal text-[#071d3b]">{{ selectedYear }}</h2>
-
-        <div class="mt-5 grid gap-2">
-          <article
-            v-for="feriado in feriadosAno"
-            :key="feriado.date"
-            class="grid gap-1 rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-3"
-          >
-            <strong class="text-sm text-[#071d3b]">{{ feriado.name }}</strong>
-            <span class="text-xs font-extrabold text-[#62728a]">{{ formatIsoDateLongBr(feriado.date) }}</span>
-          </article>
-        </div>
-      </aside>
-    </div>
-
-    <div class="grid gap-5 xl:grid-cols-[minmax(320px,420px)_minmax(0,1fr)]">
+  <section class="grid gap-5 xl:grid-cols-[minmax(320px,420px)_minmax(0,1fr)]">
       <form
         v-if="podeGerenciarAgenda"
-        class="rounded-lg border border-[#d4dee9] bg-white p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] sm:p-6"
+        class="rounded-lg border border-[#d4dee9] bg-white/95 p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] backdrop-blur-sm sm:p-6"
         @submit.prevent="salvarAgenda"
       >
         <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">{{ agendaFormCategoria }}</p>
@@ -189,7 +96,7 @@
 
       <aside
         v-else
-        class="rounded-lg border border-[#d4dee9] bg-white p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] sm:p-6"
+        class="rounded-lg border border-[#d4dee9] bg-white/95 p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] backdrop-blur-sm sm:p-6"
       >
         <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Consulta</p>
         <h2 class="mb-3 mt-2 text-xl font-normal text-[#071d3b]">Calendario escolar</h2>
@@ -198,26 +105,54 @@
         </p>
       </aside>
 
-      <article class="min-w-0 rounded-lg border border-[#d4dee9] bg-white p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] sm:p-6">
+      <article class="min-w-0 rounded-lg border border-[#d4dee9] bg-white/95 p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] backdrop-blur-sm sm:p-6">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">{{ eventosMesSelecionado.length }} evento(s)</p>
+          <div class="min-w-0">
+            <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">{{ eventosMesSelecionado.length }} evento(s) no mes</p>
             <h2 class="m-0 mt-2 text-xl font-normal text-[#071d3b]">{{ mesSelecionadoLabel }}</h2>
+            <p class="m-0 mt-1 text-sm font-semibold text-[#62728a]">Dia selecionado: {{ diaSelecionadoLabel }}</p>
           </div>
-          <button
-            class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
-            type="button"
-            title="Atualizar calendario"
-            aria-label="Atualizar calendario"
-            @click="carregarDadosCalendario"
-          >
-            <RefreshCcw class="h-5 w-5" aria-hidden="true" />
-          </button>
+          <div class="flex flex-wrap gap-2">
+            <button
+              class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
+              type="button"
+              title="Mes anterior"
+              aria-label="Mes anterior"
+              @click="mudarMes(-1)"
+            >
+              <ChevronLeft class="h-5 w-5" aria-hidden="true" />
+            </button>
+            <button
+              class="inline-flex min-h-10 items-center justify-center rounded-md border border-[#d4dee9] bg-white px-3 text-sm font-extrabold text-[#51627a] transition hover:bg-[#edf3f8]"
+              type="button"
+              @click="selecionarHoje"
+            >
+              Hoje
+            </button>
+            <button
+              class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
+              type="button"
+              title="Proximo mes"
+              aria-label="Proximo mes"
+              @click="mudarMes(1)"
+            >
+              <ChevronRight class="h-5 w-5" aria-hidden="true" />
+            </button>
+            <button
+              class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
+              type="button"
+              title="Atualizar calendario"
+              aria-label="Atualizar calendario"
+              @click="carregarDadosCalendario"
+            >
+              <RefreshCcw class="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
         </div>
 
         <p v-if="erroDisciplinas" class="alert alert-error mt-4">{{ erroDisciplinas }}</p>
 
-        <div class="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div class="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div class="min-w-0 overflow-hidden rounded-lg border border-[#d4dee9]">
             <div class="grid grid-cols-7 bg-[#f5f8fb] text-center">
               <span
@@ -232,7 +167,7 @@
               <button
                 v-for="day in gradeMes(selectedMonth)"
                 :key="day.iso"
-                class="min-h-16 border-l border-t border-[#d4dee9] p-1 text-left transition first:border-l-0 hover:bg-[#f8fbfd] sm:min-h-24 sm:p-2"
+                class="min-h-14 border-l border-t border-[#d4dee9] p-1 text-left transition first:border-l-0 hover:bg-[#f8fbfd] sm:min-h-20 sm:p-2"
                 :class="diaSelecionadoClasses(day)"
                 type="button"
                 @click="selecionarDia(day.iso)"
@@ -264,10 +199,33 @@
           </div>
 
           <div class="grid content-start gap-3">
+            <section class="grid gap-3 rounded-lg border border-[#d4dee9] bg-[#f8fbfd] p-3">
+              <div>
+                <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Dia selecionado</p>
+                <h3 class="m-0 mt-1 text-base font-extrabold text-[#071d3b]">{{ diaSelecionadoLabel }}</h3>
+              </div>
+              <p v-if="feriadoDiaSelecionado" class="m-0 rounded-md border border-[#fed7aa] bg-[#fff7ed] p-3 text-sm font-extrabold text-[#b45309]">
+                {{ feriadoDiaSelecionado.name }}
+              </p>
+              <article
+                v-for="evento in eventosDiaSelecionado"
+                :key="evento.id"
+                class="grid gap-1 rounded-md border border-[#d4dee9] bg-white p-3"
+              >
+                <span class="text-xs font-extrabold uppercase text-[#d64200]">{{ tipoAgendaLabel(evento.tipo) }}</span>
+                <strong class="break-words text-sm text-[#071d3b]">{{ evento.titulo }}</strong>
+                <span class="text-sm font-semibold text-[#51627a]">{{ evento.disciplinaNome }}</span>
+              </article>
+              <p v-if="!feriadoDiaSelecionado && !eventosDiaSelecionado.length" class="m-0 text-sm font-semibold text-[#62728a]">
+                Nenhuma marcacao neste dia.
+              </p>
+            </section>
+
+            <div class="max-h-[420px] overflow-auto rounded-lg border border-[#d4dee9] bg-white">
             <article
               v-for="evento in eventosMesSelecionado"
               :key="evento.id"
-              class="grid gap-3 rounded-md border border-[#d4dee9] p-3"
+              class="grid gap-3 border-b border-[#d4dee9] p-3 last:border-b-0"
             >
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
@@ -305,10 +263,10 @@
             <p v-if="!eventosMesSelecionado.length" class="m-0 rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-3 text-sm font-semibold text-[#62728a]">
               Nenhuma data marcada neste mes.
             </p>
+            </div>
           </div>
         </div>
       </article>
-    </div>
   </section>
 </template>
 
@@ -323,7 +281,7 @@ import type {
   DisciplinaEventoPayload
 } from '~/types/api'
 import { formatDateToIso, formatIsoDateLongBr, parseIsoDate } from '~/utils/date-utils'
-import { getFeriadosNacionaisBrasil, getFeriadosPorData } from '~/utils/feriados-brasil'
+import { getFeriadosPorData } from '~/utils/feriados-brasil'
 import { normalizeApiError } from '~/utils/api-client'
 import { getUsuarioPerfilTipo } from '~/utils/usuario-permissions'
 
@@ -368,10 +326,6 @@ const editandoAgendaId = ref('')
 const eventosDisciplina = ref<AgendaAcademicaEvento[]>([])
 const eventosEscolares = ref<AgendaAcademicaEvento[]>([])
 const diasSemanaCurtos = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
-const months = Array.from({ length: 12 }, (_, index) => ({
-  index,
-  label: new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(new Date(2026, index, 1))
-}))
 const agendaForm = reactive({
   idDisciplina: 0,
   data: selectedDate.value,
@@ -399,7 +353,6 @@ const tiposAgendaDisponiveis = computed(() => podeGerenciarEventoEscolar.value
       { value: 'trabalho', label: 'Trabalho' }
     ]
 )
-const feriadosAno = computed(() => getFeriadosNacionaisBrasil(selectedYear.value))
 const feriadosPorData = computed(() => getFeriadosPorData(selectedYear.value))
 const eventosPorData = computed(() => {
   const grouped: Record<string, AgendaAcademicaEvento[]> = {}
@@ -423,19 +376,28 @@ const eventosMesSelecionado = computed(() =>
     })
     .sort((a, b) => a.data.localeCompare(b.data) || a.disciplinaNome.localeCompare(b.disciplinaNome))
 )
+const eventosDiaSelecionado = computed(() => eventosPorData.value[selectedDate.value] ?? [])
+const feriadoDiaSelecionado = computed(() => feriadosPorData.value[selectedDate.value])
 const mesSelecionadoLabel = computed(() =>
   new Intl.DateTimeFormat('pt-BR', {
     month: 'long',
     year: 'numeric'
   }).format(new Date(selectedYear.value, selectedMonth.value, 1))
 )
+const diaSelecionadoLabel = computed(() => formatIsoDateLongBr(selectedDate.value))
 
 watch(() => agendaForm.data, (value) => {
   const date = parseIsoDate(value)
   if (date) {
+    const periodChanged = selectedYear.value !== date.getFullYear() || selectedMonth.value !== date.getMonth()
+
     selectedYear.value = date.getFullYear()
     selectedMonth.value = date.getMonth()
     selectedDate.value = value
+
+    if (periodChanged) {
+      void carregarDadosCalendario()
+    }
   }
 })
 
@@ -617,28 +579,20 @@ function limparAgendaForm() {
   agendaForm.observacao = ''
 }
 
-function mudarAno(amount: number) {
-  selectedYear.value += amount
-  selectedDate.value = formatDateToIso(new Date(selectedYear.value, selectedMonth.value, 1))
-  agendaForm.data = selectedDate.value
-  void carregarDadosCalendario()
+function mudarMes(amount: number) {
+  const currentDate = parseIsoDate(selectedDate.value) ?? new Date(selectedYear.value, selectedMonth.value, 1)
+  const targetMonth = new Date(selectedYear.value, selectedMonth.value + amount, 1)
+  const lastDayOfTargetMonth = new Date(targetMonth.getFullYear(), targetMonth.getMonth() + 1, 0).getDate()
+  const targetDay = Math.min(currentDate.getDate(), lastDayOfTargetMonth)
+
+  agendaForm.data = formatDateToIso(new Date(targetMonth.getFullYear(), targetMonth.getMonth(), targetDay))
 }
 
 function selecionarHoje() {
-  selectedYear.value = hoje.getFullYear()
-  selectedMonth.value = hoje.getMonth()
-  selectedDate.value = formatDateToIso(hoje)
-  agendaForm.data = selectedDate.value
-}
-
-function selecionarMes(monthIndex: number) {
-  selectedMonth.value = monthIndex
-  selectedDate.value = formatDateToIso(new Date(selectedYear.value, monthIndex, 1))
-  agendaForm.data = selectedDate.value
+  agendaForm.data = formatDateToIso(hoje)
 }
 
 function selecionarDia(iso: string) {
-  selectedDate.value = iso
   agendaForm.data = iso
 }
 
@@ -659,32 +613,16 @@ function gradeMes(monthIndex: number): DiaCalendario[] {
   })
 }
 
-function feriadosPorMes(monthIndex: number) {
-  return feriadosAno.value.filter((feriado) => parseIsoDate(feriado.date)?.getMonth() === monthIndex)
-}
-
-function miniDiaClasses(day: DiaCalendario) {
-  const isHoliday = Boolean(feriadosPorData.value[day.iso])
-  const hasEvent = Boolean(eventosPorData.value[day.iso]?.length)
-  const isSelected = selectedDate.value === day.iso
-  const isToday = formatDateToIso(hoje) === day.iso
-
-  if (isSelected) return 'bg-[#147f72] text-white'
-  if (isHoliday) return 'bg-[#fff3e8] text-[#b45309]'
-  if (hasEvent) return 'bg-[#eaf4f1] text-[#006b61]'
-  if (isToday) return 'bg-[#edf3f8] text-[#071d3b] ring-2 ring-[#147f72]/25'
-  if (!day.currentMonth) return 'text-[#b4bfcc]'
-
-  return 'text-[#071d3b]'
-}
-
 function diaSelecionadoClasses(day: DiaCalendario) {
   const classes = []
+  const isSelected = selectedDate.value === day.iso
+  const isToday = formatDateToIso(hoje) === day.iso
 
   if (!day.currentMonth) classes.push('bg-[#f8fbfd] text-[#9aa7b7]')
   else classes.push('bg-white text-[#071d3b]')
   if (feriadosPorData.value[day.iso]) classes.push('bg-[#fff8ed]')
-  if (selectedDate.value === day.iso) classes.push('ring-2 ring-inset ring-[#147f72]')
+  if (isToday) classes.push('ring-2 ring-inset ring-[#f59e0b]')
+  if (isSelected) classes.push('bg-[#f0faf8] ring-2 ring-inset ring-[#147f72]')
 
   return classes.join(' ')
 }

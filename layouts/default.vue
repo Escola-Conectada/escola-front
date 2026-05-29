@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-[#f3f7fb] text-[#071d3b]">
+  <div class="min-h-screen text-[#071d3b]">
     <header class="mx-auto flex max-w-7xl flex-col gap-4 px-3 pb-4 pt-5 min-[380px]:px-4 sm:gap-5 sm:px-8 sm:pb-5 sm:pt-6 lg:flex-row lg:items-start lg:justify-between">
       <div class="min-w-0">
         <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">
