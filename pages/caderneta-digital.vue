@@ -255,13 +255,20 @@
           <span class="min-w-0 break-words font-semibold text-[#243044]">{{ lancamento.nomeDisciplina }}</span>
           <div class="flex justify-center">
             <button
-              class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
+              class="group relative inline-flex h-10 w-10 items-center justify-center rounded-md border transition focus:outline-none focus:ring-4"
+              :class="aprendizadoSituacaoVisual(lancamento).buttonClass"
               type="button"
-              title="Ver aprendizado"
-              aria-label="Ver aprendizado"
+              :title="aprendizadoSituacaoTooltip(lancamento)"
+              :aria-label="aprendizadoSituacaoTooltip(lancamento)"
               @click="abrirAprendizado(lancamento)"
             >
-              <GraduationCap class="h-5 w-5" aria-hidden="true" />
+              <component :is="aprendizadoSituacaoVisual(lancamento).icon" class="h-5 w-5" aria-hidden="true" />
+              <span
+                class="pointer-events-none absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-extrabold text-white opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100"
+                :class="aprendizadoSituacaoVisual(lancamento).tooltipClass"
+              >
+                {{ aprendizadoSituacaoTooltip(lancamento) }}
+              </span>
             </button>
           </div>
           <span class="text-[#243044]">
@@ -315,12 +322,21 @@
           </div>
           <div class="mt-3 grid gap-2 text-sm text-[#243044]">
             <button
-              class="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[#edf3f8] px-3 text-sm font-extrabold text-[#071d3b] transition hover:bg-[#dfe8f1]"
+              class="group relative inline-flex min-h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-extrabold transition focus:outline-none focus:ring-4"
+              :class="aprendizadoSituacaoVisual(lancamento).buttonClass"
               type="button"
+              :title="aprendizadoSituacaoTooltip(lancamento)"
+              :aria-label="aprendizadoSituacaoTooltip(lancamento)"
               @click="abrirAprendizado(lancamento)"
             >
-              <GraduationCap class="h-5 w-5" aria-hidden="true" />
+              <component :is="aprendizadoSituacaoVisual(lancamento).icon" class="h-5 w-5" aria-hidden="true" />
               Aprendizado
+              <span
+                class="pointer-events-none absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-extrabold text-white opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100"
+                :class="aprendizadoSituacaoVisual(lancamento).tooltipClass"
+              >
+                {{ aprendizadoSituacaoTooltip(lancamento) }}
+              </span>
             </button>
             <span><strong>Presencas:</strong> {{ lancamento.presencas }}</span>
             <span><strong>Faltas:</strong> {{ lancamento.faltas }}</span>
@@ -403,7 +419,7 @@
 </template>
 
 <script setup lang="ts">
-import { BookOpen, ClipboardCheck, GraduationCap, Pencil, RefreshCcw, Search, Trash2, X } from '@lucide/vue'
+import { BookOpen, CircleCheck, CircleX, ClipboardCheck, GraduationCap, Pencil, RefreshCcw, Search, Trash2, TriangleAlert, X } from '@lucide/vue'
 import type {
   CadernetaDigitalPayload,
   CadernetaDigitalSummary,
@@ -744,5 +760,63 @@ function situacaoCadernetaClass(lancamento: CadernetaDigitalSummary) {
   }
 
   return classes[lancamento.corSituacao] ?? 'text-[#62728a]'
+}
+
+function aprendizadoSituacaoVisual(lancamento: CadernetaDigitalSummary) {
+  const situacao = normalizarSituacao(lancamento.situacao)
+  const corSituacao = normalizarSituacao(lancamento.corSituacao)
+
+  if (situacao.includes('reprov') || corSituacao === 'vermelho') {
+    return {
+      icon: CircleX,
+      buttonClass: 'border-[#f2b8b5] bg-[#fff1f1] text-[#b42318] hover:bg-[#ffe1e3] focus:ring-[#dc2626]/15',
+      tooltipClass: 'bg-[#7f1d1d]'
+    }
+  }
+
+  if (situacao.includes('recuper')) {
+    return {
+      icon: TriangleAlert,
+      buttonClass: 'border-[#fed7aa] bg-[#fff7ed] text-[#b45309] hover:bg-[#ffedd5] focus:ring-[#f59e0b]/20',
+      tooltipClass: 'bg-[#92400e]'
+    }
+  }
+
+  if (situacao.includes('aprov') || corSituacao === 'azul') {
+    return {
+      icon: CircleCheck,
+      buttonClass: 'border-[#b7e4da] bg-[#eaf4f1] text-[#0f766e] hover:bg-[#d8eee8] focus:ring-[#147f72]/15',
+      tooltipClass: 'bg-[#0f766e]'
+    }
+  }
+
+  return {
+    icon: GraduationCap,
+    buttonClass: 'border-[#d4dee9] bg-[#edf3f8] text-[#071d3b] hover:bg-[#dfe8f1] focus:ring-[#147f72]/10',
+    tooltipClass: 'bg-[#071d3b]'
+  }
+}
+
+function aprendizadoSituacaoTooltip(lancamento: CadernetaDigitalSummary) {
+  return `Situacao: ${formatarSituacaoAprendizado(lancamento)}`
+}
+
+function formatarSituacaoAprendizado(lancamento: CadernetaDigitalSummary) {
+  const situacao = normalizarSituacao(lancamento.situacao)
+  const corSituacao = normalizarSituacao(lancamento.corSituacao)
+
+  if (situacao.includes('reprov') || corSituacao === 'vermelho') return 'Reprovado'
+  if (situacao.includes('recuper')) return 'Em recuperacao'
+  if (situacao.includes('aprov') || corSituacao === 'azul') return 'Aprovado'
+
+  return lancamento.situacao || 'Nao informada'
+}
+
+function normalizarSituacao(value?: string | null) {
+  return (value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
 }
 </script>
