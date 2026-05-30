@@ -70,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowRight, BookOpen, CalendarDays, FileText, GripVertical, Megaphone, QrCode, ShieldCheck, UserCog } from '@lucide/vue'
+import { ArrowRight, BookOpen, CalendarDays, FileText, GripVertical, Megaphone, QrCode, ShieldCheck, UserCog, UsersRound } from '@lucide/vue'
 import type { Component } from 'vue'
 import { getUsuarioPerfilTipo } from '~/utils/usuario-permissions'
 
@@ -92,6 +92,7 @@ interface ModuloPainel {
 
 const baseModulos = computed<ModuloPainel[]>(() => [
   { id: 'usuarios', label: 'Usuarios', title: auth.isAluno ? 'Corrigir meu cadastro' : 'Gerenciar usuarios', to: '/usuarios', icon: UserCog, show: true },
+  { id: 'alunos-turmas', label: 'Matriculas', title: 'Associar alunos as turmas', to: '/alunos-turmas', icon: UsersRound, show: ['administrador', 'diretoria'].includes(perfilTipo.value) },
   { id: 'caderneta-digital', label: 'Caderneta Digital', title: auth.isProfessor ? 'Administrar notas e frequencia' : 'Visualizar boletim e frequencia', to: '/caderneta-digital', icon: BookOpen, show: true },
   { id: 'calendario-escolar', label: 'Calendario Escolar', title: auth.isProfessor ? 'Planejar avaliacoes e trabalhos' : 'Consultar agenda escolar', to: '/calendario-escolar', icon: CalendarDays, show: true },
   { id: 'comunicados', label: 'Comunicados', title: 'Enviar avisos para alunos e professores', to: '/comunicados', icon: Megaphone, show: perfilTipo.value === 'administrador' },

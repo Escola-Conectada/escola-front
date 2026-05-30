@@ -98,20 +98,6 @@
           <h2 class="mb-4 mt-1 text-lg font-normal text-[#071d3b]">Notas e frequencia</h2>
 
           <div class="grid gap-3">
-            <label class="grid gap-1.5 text-sm font-extrabold text-[#071d3b]">
-              <span>Aluno</span>
-              <select
-                v-model.number="lancamentoForm.idAlunoUsuario"
-                class="min-h-10 rounded-md border border-[#ccd8e5] bg-white px-3 text-sm text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
-                required
-              >
-                <option :value="0">Selecione</option>
-                <option v-for="aluno in alunosDisponiveis" :key="aluno.idUsuario" :value="aluno.idUsuario">
-                  {{ aluno.nome }} - {{ aluno.email }}
-                </option>
-              </select>
-            </label>
-
             <div class="grid gap-3 sm:grid-cols-2">
               <label class="grid gap-1.5 text-sm font-extrabold text-[#071d3b]">
                 <span>Tipo do ensino</span>
@@ -142,6 +128,21 @@
                 </select>
               </label>
             </div>
+
+            <label class="grid gap-1.5 text-sm font-extrabold text-[#071d3b]">
+              <span>Aluno</span>
+              <select
+                v-model.number="lancamentoForm.idAlunoUsuario"
+                class="min-h-10 rounded-md border border-[#ccd8e5] bg-white px-3 text-sm text-[#071d3b] outline-none focus:border-[#147f72] focus:ring-4 focus:ring-[#147f72]/10"
+                required
+                :disabled="!lancamentoForm.idTurmaEnsino || !alunosDisponiveis.length"
+              >
+                <option :value="0">Selecione</option>
+                <option v-for="aluno in alunosDisponiveis" :key="aluno.idUsuario" :value="aluno.idUsuario">
+                  {{ aluno.nome }} - {{ aluno.email }}
+                </option>
+              </select>
+            </label>
 
             <label class="grid gap-1.5 text-sm font-extrabold text-[#071d3b]">
               <span>Disciplina</span>
@@ -525,6 +526,7 @@
 <script setup lang="ts">
 import { CircleCheck, CircleX, ClipboardCheck, GraduationCap, Pencil, RefreshCcw, Search, Trash2, TriangleAlert, X } from '@lucide/vue'
 import type {
+  AlunoTurmaEnsino,
   AreaConhecimentoCurricular,
   CadernetaDigitalPayload,
   CadernetaDigitalSummary,
@@ -566,6 +568,7 @@ interface DisciplinaOpcao {
 const auth = useAuthStore()
 const { $api } = useNuxtApp()
 const usuarios = ref<UsuarioSummary[]>([])
+const matriculasTurmas = ref<AlunoTurmaEnsino[]>([])
 const disciplinas = ref<DisciplinaCaderneta[]>([])
 const estruturaEnsino = ref<TipoEnsinoCurricular[]>([])
 const lancamentos = ref<CadernetaDigitalSummary[]>([])
@@ -607,9 +610,16 @@ const gradeCadernetaTemplate = computed(() =>
     ? 'minmax(150px,1.15fr) minmax(130px,0.9fr) minmax(170px,1.15fr) 110px minmax(95px,0.65fr) 88px'
     : 'minmax(150px,1.2fr) minmax(130px,0.95fr) minmax(170px,1.15fr) 110px minmax(95px,0.7fr)'
 )
-const alunosDisponiveis = computed(() =>
-  usuarios.value.filter((usuario) => isPerfilAluno(usuario.descricaoPerfil))
-)
+const alunosDisponiveis = computed(() => {
+  const alunosTurmaIds = new Set(matriculasTurmas.value
+    .filter((matricula) => matricula.idTurmaEnsino === lancamentoForm.idTurmaEnsino)
+    .map((matricula) => matricula.idAlunoUsuario))
+
+  return usuarios.value.filter((usuario) =>
+    isPerfilAluno(usuario.descricaoPerfil)
+    && alunosTurmaIds.has(usuario.idUsuario)
+  )
+})
 const estruturaTipoSelecionado = computed(() =>
   estruturaEnsino.value.find((tipo) => tipo.idTipoEnsino === estruturaTipoEnsinoId.value) ?? null
 )
@@ -738,6 +748,16 @@ watch(() => lancamentoForm.idTurmaEnsino, () => {
   if (!lancamentoForm.idDisciplina || !disciplinaPertenceAoLancamento(lancamentoForm.idDisciplina)) {
     lancamentoForm.idDisciplina = primeiraDisciplinaLancamento()?.idDisciplina ?? 0
   }
+
+  if (lancamentoForm.idAlunoUsuario && !alunoPertenceATurmaLancamento(lancamentoForm.idAlunoUsuario)) {
+    lancamentoForm.idAlunoUsuario = 0
+  }
+})
+
+watch(matriculasTurmas, () => {
+  if (lancamentoForm.idAlunoUsuario && !alunoPertenceATurmaLancamento(lancamentoForm.idAlunoUsuario)) {
+    lancamentoForm.idAlunoUsuario = 0
+  }
 })
 
 watch(tipoEnsinoFiltro, () => {
@@ -774,7 +794,8 @@ async function carregarDados() {
       carregarEstruturaEnsino(),
       carregarDisciplinas(),
       carregarLancamentos(),
-      podeAdministrar.value ? carregarUsuarios() : Promise.resolve()
+      podeAdministrar.value ? carregarUsuarios() : Promise.resolve(),
+      podeAdministrar.value ? carregarMatriculasTurmas() : Promise.resolve()
     ])
   } catch (err) {
     erroLista.value = normalizeApiError(err)
@@ -809,6 +830,10 @@ async function carregarLancamentos() {
 
 async function carregarUsuarios() {
   usuarios.value = await $api<UsuarioSummary[]>('/usuarios')
+}
+
+async function carregarMatriculasTurmas() {
+  matriculasTurmas.value = await $api<AlunoTurmaEnsino[]>('/alunos-turmas')
 }
 
 async function salvarDisciplina() {
@@ -882,6 +907,11 @@ async function salvarLancamento() {
 
   if (!lancamentoForm.idAlunoUsuario || !lancamentoForm.idTipoEnsino || !lancamentoForm.idTurmaEnsino || !lancamentoForm.idDisciplina) {
     erroLancamento.value = 'Informe aluno, tipo do ensino, turma e disciplina.'
+    return
+  }
+
+  if (!alunoPertenceATurmaLancamento(lancamentoForm.idAlunoUsuario)) {
+    erroLancamento.value = 'Aluno nao matriculado na turma selecionada.'
     return
   }
 
@@ -1068,6 +1098,15 @@ function disciplinaPertenceAoLancamento(idDisciplina: number) {
   return areasLancamento.value.some((area) =>
     area.disciplinas.some((disciplina) => disciplina.idDisciplina === idDisciplina)
   ) || disciplinasProfessorLancamento.value.some((disciplina) => disciplina.idDisciplina === idDisciplina)
+}
+
+function alunoPertenceATurmaLancamento(idAlunoUsuario: number) {
+  if (!idAlunoUsuario || !lancamentoForm.idTurmaEnsino) return false
+
+  return matriculasTurmas.value.some((matricula) =>
+    matricula.idAlunoUsuario === idAlunoUsuario
+    && matricula.idTurmaEnsino === lancamentoForm.idTurmaEnsino
+  )
 }
 
 function primeiraDisciplinaLancamento() {

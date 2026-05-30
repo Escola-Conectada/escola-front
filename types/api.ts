@@ -118,6 +118,26 @@ export interface Perfil {
   descricaoPerfil: string
 }
 
+export interface AlunoTurmaEnsino {
+  idAlunoTurmaEnsino: number
+  idAlunoUsuario: number
+  nomeAluno: string
+  emailAluno: string
+  idTipoEnsino: number
+  nomeTipoEnsino: string
+  idTurmaEnsino: number
+  nomeTurmaEnsino: string
+  codigoTurma: string
+  idUsuarioResponsavel?: number | null
+  nomeUsuarioResponsavel?: string | null
+  matriculadoEmUtc: string
+}
+
+export interface AlunoTurmaEnsinoPayload {
+  idAlunoUsuario: number
+  idTurmaEnsino: number
+}
+
 export interface LoginCredentials {
   email: string
   senha: string

@@ -166,6 +166,7 @@ const nomeUsuario = computed(() => auth.usuario?.nome || auth.perfil || 'Usuario
 const notificacoesNaoLidas = computed(() => notificacoes.value.filter((notificacao) => !notificacao.lida).length)
 const tituloPagina = computed(() => {
   if (route.path.startsWith('/usuarios')) return 'Gestao de Usuarios'
+  if (route.path.startsWith('/alunos-turmas')) return 'Matriculas de Alunos'
   if (route.path.startsWith('/caderneta-digital')) return 'Caderneta Digital'
   if (route.path.startsWith('/calendario-escolar')) return 'Calendario Escolar'
   if (route.path.startsWith('/qr-code-bancario')) return 'QR Code Bancario'
