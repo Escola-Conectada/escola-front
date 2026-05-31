@@ -17,6 +17,27 @@
   --danger: #b42318;
   --danger-bg: #fff1f0;
   --focus: #f59e0b;
+  --page-overlay-start: rgba(243, 247, 251, 0.76);
+  --page-overlay-end: rgba(243, 247, 251, 0.58);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #06111f;
+  --surface: #0e1b2c;
+  --surface-muted: #17263a;
+  --border: #2b3d55;
+  --text: #e7eef8;
+  --muted: #a9b7ca;
+  --primary: #2dd4bf;
+  --primary-dark: #14b8a6;
+  --success: #5eead4;
+  --success-bg: rgba(20, 184, 166, 0.16);
+  --danger: #fca5a5;
+  --danger-bg: rgba(127, 29, 29, 0.34);
+  --focus: #fbbf24;
+  --page-overlay-start: rgba(6, 17, 31, 0.76);
+  --page-overlay-end: rgba(6, 17, 31, 0.54);
 }
 
 * {
@@ -48,7 +69,7 @@ body::before {
   z-index: 0;
   pointer-events: none;
   background:
-    linear-gradient(115deg, rgba(243, 247, 251, 0.97), rgba(243, 247, 251, 0.9)),
+    linear-gradient(115deg, var(--page-overlay-start), var(--page-overlay-end)),
     url("/images/connected-school-panel.jpg") center / cover no-repeat;
 }
 
@@ -441,6 +462,104 @@ td {
 
 tbody tr:hover {
   background: #fafcff;
+}
+
+:root[data-theme="dark"] .login-panel,
+:root[data-theme="dark"] .form-panel,
+:root[data-theme="dark"] .table-shell,
+:root[data-theme="dark"] [class*="bg-white"] {
+  background-color: rgba(14, 27, 44, 0.92) !important;
+}
+
+:root[data-theme="dark"] [class*="bg-[#f8fbfd]"],
+:root[data-theme="dark"] [class*="bg-[#f5f8fb]"],
+:root[data-theme="dark"] [class*="bg-[#edf3f8]"],
+:root[data-theme="dark"] [class*="bg-slate-100"],
+:root[data-theme="dark"] [class*="bg-[#eaf4f1]"],
+:root[data-theme="dark"] [class*="bg-[#eff6ff]"] {
+  background-color: rgba(23, 38, 58, 0.94) !important;
+}
+
+:root[data-theme="dark"] [class*="bg-[#dfe8f1]"],
+:root[data-theme="dark"] [class*="hover:bg-[#dfe8f1]"]:hover,
+:root[data-theme="dark"] [class*="hover:bg-[#edf3f8]"]:hover,
+:root[data-theme="dark"] [class*="hover:bg-[#f8fbfd]"]:hover,
+:root[data-theme="dark"] tbody tr:hover {
+  background-color: rgba(37, 55, 78, 0.96) !important;
+}
+
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea {
+  border-color: #33465f;
+  background: #091729;
+  color: #e7eef8;
+}
+
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder {
+  color: #91a1b7;
+}
+
+:root[data-theme="dark"] th {
+  background: #17263a;
+  color: #c4d0df;
+}
+
+:root[data-theme="dark"] td {
+  color: #d7e2ef;
+}
+
+:root[data-theme="dark"] .alert-success {
+  border-color: rgba(94, 234, 212, 0.34);
+  background: rgba(20, 184, 166, 0.16);
+  color: #99f6e4;
+}
+
+:root[data-theme="dark"] .alert-warning {
+  border-color: rgba(251, 191, 36, 0.38);
+  background: rgba(120, 53, 15, 0.34);
+  color: #fde68a;
+}
+
+:root[data-theme="dark"] .alert-error,
+:root[data-theme="dark"] [class*="bg-[#ffe1e3]"],
+:root[data-theme="dark"] [class*="bg-[#fff1f1]"],
+:root[data-theme="dark"] [class*="bg-[#fff1f0]"] {
+  border-color: rgba(252, 165, 165, 0.36);
+  background-color: rgba(127, 29, 29, 0.34) !important;
+  color: #fecaca;
+}
+
+:root[data-theme="dark"] [class*="border-[#d4dee9]"],
+:root[data-theme="dark"] [class*="border-[#ccd8e5]"],
+:root[data-theme="dark"] [class*="border-slate-200"],
+:root[data-theme="dark"] [class*="border-[#cbdce8]"] {
+  border-color: #2b3d55 !important;
+}
+
+:root[data-theme="dark"] [class*="text-[#071d3b]"],
+:root[data-theme="dark"] [class*="text-[#243044]"],
+:root[data-theme="dark"] [class*="text-[#243244]"],
+:root[data-theme="dark"] [class*="text-slate-900"] {
+  color: #e7eef8 !important;
+}
+
+:root[data-theme="dark"] [class*="text-[#51627a]"],
+:root[data-theme="dark"] [class*="text-[#62728a]"],
+:root[data-theme="dark"] [class*="text-[#667085]"],
+:root[data-theme="dark"] [class*="text-slate-500"],
+:root[data-theme="dark"] [class*="text-[#7a8798]"] {
+  color: #a9b7ca !important;
+}
+
+:root[data-theme="dark"] [class*="text-[#006b61]"],
+:root[data-theme="dark"] [class*="text-[#147f72]"] {
+  color: #5eead4 !important;
+}
+
+:root[data-theme="dark"] [class*="ring-offset-white"] {
+  --tw-ring-offset-color: #0e1b2c !important;
 }
 
 .row-actions {

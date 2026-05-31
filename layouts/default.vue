@@ -171,6 +171,7 @@ const tituloPagina = computed(() => {
   if (route.path.startsWith('/calendario-escolar')) return 'Calendario Escolar'
   if (route.path.startsWith('/qr-code-bancario')) return 'QR Code Bancario'
   if (route.path.startsWith('/holerite')) return 'Holerite'
+  if (route.path.startsWith('/configuracoes')) return 'Configuracoes'
   if (route.path.startsWith('/alterar-senha')) return 'Alterar senha'
 
   return 'Escola Conectada'

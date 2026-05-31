@@ -70,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowRight, BookOpen, CalendarDays, FileText, GripVertical, Megaphone, QrCode, ShieldCheck, UserCog, UsersRound } from '@lucide/vue'
+import { ArrowRight, BookOpen, CalendarDays, FileText, GripVertical, Megaphone, MonitorCog, QrCode, ShieldCheck, UserCog, UsersRound } from '@lucide/vue'
 import type { Component } from 'vue'
 import { getUsuarioPerfilTipo } from '~/utils/usuario-permissions'
 
@@ -98,6 +98,7 @@ const baseModulos = computed<ModuloPainel[]>(() => [
   { id: 'comunicados', label: 'Comunicados', title: 'Enviar avisos para alunos e professores', to: '/comunicados', icon: Megaphone, show: perfilTipo.value === 'administrador' },
   { id: 'qr-code-bancario', label: 'QR Code', title: 'Gerar dados bancarios ficticios', to: '/qr-code-bancario', icon: QrCode, show: auth.isAluno },
   { id: 'holerite', label: 'Holerite', title: ['administrador', 'diretoria'].includes(perfilTipo.value) ? 'Lancar e consultar PDFs' : 'Consultar meus PDFs', to: '/holerite', icon: FileText, show: ['administrador', 'diretoria', 'professor'].includes(perfilTipo.value) },
+  { id: 'configuracoes', label: 'Configuracoes', title: 'Ajustar tema da aplicacao', to: '/configuracoes', icon: MonitorCog, show: true },
   { id: 'seguranca', label: 'Seguranca', title: 'Alterar senha', to: '/alterar-senha', icon: ShieldCheck, show: true }
 ].filter((item) => item.show))
 
