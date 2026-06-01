@@ -7,7 +7,10 @@
       <div class="grid gap-4">
         <div class="rounded-lg border border-[#d4dee9] bg-white/80 p-4">
           <span class="text-xs font-extrabold text-[#62728a]">Usuario</span>
-          <strong class="mt-2 block text-[#071d3b]">{{ auth.usuario?.nome }}</strong>
+          <div class="mt-3 flex min-w-0 items-center gap-3">
+            <UserAvatar :usuario="auth.usuario" size="md" />
+            <strong class="min-w-0 break-words text-[#071d3b]">{{ auth.usuario?.nome }}</strong>
+          </div>
         </div>
         <div class="rounded-lg border border-[#d4dee9] bg-white/80 p-4">
           <span class="text-xs font-extrabold text-[#62728a]">Perfil</span>

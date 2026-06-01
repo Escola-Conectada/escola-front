@@ -277,20 +277,33 @@
         </div>
 
         <div class="grid gap-2">
-          <a
-            class="flex min-w-0 items-center gap-3 rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-3 text-[#071d3b] no-underline transition hover:border-[#147f72]"
-            :href="`mailto:${usuarioContatoPopup.email}`"
+          <button
+            class="flex min-w-0 items-center justify-between gap-3 rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-3 text-left text-[#071d3b] transition hover:border-[#147f72] focus:outline-none focus:ring-4 focus:ring-[#147f72]/10"
+            type="button"
+            title="Copiar email"
+            aria-label="Copiar email"
+            @click="copiarContato('email', usuarioContatoPopup.email)"
           >
-            <Mail class="h-5 w-5 shrink-0" aria-hidden="true" />
-            <span class="break-all text-sm font-extrabold">{{ usuarioContatoPopup.email }}</span>
-          </a>
-          <a
-            class="flex min-w-0 items-center gap-3 rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-3 text-[#071d3b] no-underline transition hover:border-[#147f72]"
-            :href="telefoneContatoHref"
+            <span class="inline-flex min-w-0 items-center gap-3">
+              <Mail class="h-5 w-5 shrink-0" aria-hidden="true" />
+              <span class="break-all text-sm font-extrabold">{{ usuarioContatoPopup.email }}</span>
+            </span>
+            <component :is="contatoCopiadoTipo === 'email' ? Check : Copy" class="h-5 w-5 shrink-0 text-[#147f72]" aria-hidden="true" />
+          </button>
+          <button
+            class="flex min-w-0 items-center justify-between gap-3 rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-3 text-left text-[#071d3b] transition hover:border-[#147f72] focus:outline-none focus:ring-4 focus:ring-[#147f72]/10"
+            type="button"
+            title="Copiar telefone"
+            aria-label="Copiar telefone"
+            @click="copiarContato('telefone', telefoneContatoFormatado)"
           >
-            <Phone class="h-5 w-5 shrink-0" aria-hidden="true" />
-            <span class="text-sm font-extrabold">{{ telefoneContatoFormatado }}</span>
-          </a>
+            <span class="inline-flex min-w-0 items-center gap-3">
+              <Phone class="h-5 w-5 shrink-0" aria-hidden="true" />
+              <span class="text-sm font-extrabold">{{ telefoneContatoFormatado }}</span>
+            </span>
+            <component :is="contatoCopiadoTipo === 'telefone' ? Check : Copy" class="h-5 w-5 shrink-0 text-[#147f72]" aria-hidden="true" />
+          </button>
+          <p v-if="erroContato" class="alert alert-error m-0">{{ erroContato }}</p>
           <div class="grid min-w-0 gap-2 rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-3 text-sm font-semibold text-[#51627a]">
             <span><strong class="text-[#071d3b]">Mae:</strong> {{ usuarioContatoPopup.nomeMae || '-' }}</span>
             <span><strong class="text-[#071d3b]">Pai:</strong> {{ usuarioContatoPopup.nomePai || '-' }}</span>
@@ -351,14 +364,14 @@
 </template>
 
 <script setup lang="ts">
-import { ChevronLeft, ChevronRight, Contact, Download, Eye, FileText, Mail, Pencil, Phone, Plus, RefreshCcw, Search, Trash2, X } from '@lucide/vue'
+import { Check, ChevronLeft, ChevronRight, Contact, Copy, Download, Eye, FileText, Mail, Pencil, Phone, Plus, RefreshCcw, Search, Trash2, X } from '@lucide/vue'
 import type { Perfil, UsuarioArquivo, UsuarioSummary } from '~/types/api'
 import { normalizeApiError } from '~/utils/api-client'
 import { downloadBlob, fetchApiBlob } from '~/utils/api-file'
 import {
-  formatBrazilPhone,
-  normalizeBrazilPhoneForApi
+  formatBrazilPhone
 } from '~/utils/br-phone'
+import { copyShareText } from '~/utils/share-actions'
 import {
   canCreateAlunoUsuarios,
   canDeleteUsuario,
@@ -380,10 +393,12 @@ const arquivosPorUsuario = ref<Record<number, UsuarioArquivo[]>>({})
 const fotosPorUsuario = ref<Record<number, string>>({})
 const usuarioContatoPopup = ref<UsuarioSummary | null>(null)
 const usuarioArquivosPopup = ref<UsuarioSummary | null>(null)
+const contatoCopiadoTipo = ref('')
 const carregando = ref(false)
 const carregandoArquivosLista = ref(false)
 const arquivoBaixandoId = ref(0)
 const erroLista = ref('')
+const erroContato = ref('')
 const busca = ref('')
 const perfilFiltro = ref(0)
 const pagina = ref(1)
@@ -410,9 +425,6 @@ const arquivosPopup = computed(() =>
 )
 const telefoneContatoFormatado = computed(() =>
   usuarioContatoPopup.value ? formatBrazilPhone(usuarioContatoPopup.value.telefone) || '-' : '-'
-)
-const telefoneContatoHref = computed(() =>
-  usuarioContatoPopup.value ? `tel:${normalizeBrazilPhoneForApi(usuarioContatoPopup.value.telefone)}` : ''
 )
 const usuariosFiltrados = computed(() => {
   const termo = busca.value.toLowerCase()
@@ -564,11 +576,43 @@ function usuarioTemCertificados(usuario: UsuarioSummary) {
 }
 
 function abrirContatoUsuario(usuario: UsuarioSummary) {
+  contatoCopiadoTipo.value = ''
+  erroContato.value = ''
   usuarioContatoPopup.value = usuario
 }
 
 function fecharContatoUsuario() {
+  contatoCopiadoTipo.value = ''
+  erroContato.value = ''
   usuarioContatoPopup.value = null
+}
+
+async function copiarContato(tipo: 'email' | 'telefone', valor: string) {
+  const texto = valor.trim()
+
+  if (!texto || texto === '-') {
+    return
+  }
+
+  erroContato.value = ''
+
+  try {
+    const copiado = await copyShareText(texto)
+
+    if (!copiado) {
+      erroContato.value = 'Nao foi possivel acessar a area de transferencia.'
+      return
+    }
+
+    contatoCopiadoTipo.value = tipo
+    window.setTimeout(() => {
+      if (contatoCopiadoTipo.value === tipo) {
+        contatoCopiadoTipo.value = ''
+      }
+    }, 1800)
+  } catch {
+    erroContato.value = 'Nao foi possivel copiar.'
+  }
 }
 
 function abrirArquivosProfessor(usuario: UsuarioSummary) {

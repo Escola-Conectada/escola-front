@@ -20,9 +20,12 @@
       </div>
 
       <div class="flex w-full shrink-0 flex-col items-start gap-3 lg:w-auto lg:items-end">
-        <p class="m-0 max-w-full break-words text-sm font-extrabold text-[#071d3b]">
-          {{ nomeUsuario }}
-        </p>
+        <div class="flex max-w-full items-center gap-2 lg:justify-end">
+          <UserAvatar :usuario="auth.usuario" size="sm" />
+          <p class="m-0 max-w-full break-words text-sm font-extrabold text-[#071d3b]">
+            {{ nomeUsuario }}
+          </p>
+        </div>
         <div class="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-3">
           <div class="relative">
             <button

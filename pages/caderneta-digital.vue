@@ -492,9 +492,15 @@
         </div>
 
         <div class="grid gap-3">
-          <div class="rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-4">
-            <span class="text-xs font-extrabold uppercase text-[#62728a]">Notas</span>
-            <strong class="mt-2 block break-words text-[#071d3b]">{{ formatNotas(lancamentoAprendizadoPopup.notas) }}</strong>
+          <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div
+              v-for="nota in notasDetalhadas(lancamentoAprendizadoPopup.notas)"
+              :key="nota.label"
+              class="rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-4"
+            >
+              <span class="text-xs font-extrabold uppercase text-[#62728a]">{{ nota.label }}</span>
+              <strong class="mt-2 block text-[#071d3b]">{{ nota.value }}</strong>
+            </div>
           </div>
           <div class="rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-4">
             <span class="text-xs font-extrabold uppercase text-[#62728a]">Estrutura</span>
@@ -510,7 +516,7 @@
             </div>
             <div class="rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-4">
               <span class="text-xs font-extrabold uppercase text-[#62728a]">Situacao</span>
-              <strong class="mt-2 block" :class="situacaoCadernetaClass(lancamentoAprendizadoPopup)">
+              <strong class="mt-2 inline-flex w-fit rounded-md px-2 py-1" :class="situacaoCadernetaBadgeClass(lancamentoAprendizadoPopup)">
                 {{ lancamentoAprendizadoPopup.situacao }}
               </strong>
             </div>
@@ -1162,20 +1168,38 @@ function formatNotas(notas: number[]) {
     : '-'
 }
 
+function notasDetalhadas(notas: number[]) {
+  return Array.from({ length: EMPTY_NOTAS.length }, (_, index) => ({
+    label: `Nota ${index + 1}`,
+    value: notas[index] === undefined
+      ? '-'
+      : notas[index].toLocaleString('pt-BR', { maximumFractionDigits: 1 })
+  }))
+}
+
 function formatarMediaLancamento(media: number) {
   return Number.isFinite(media)
     ? media.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
     : '-'
 }
 
-function situacaoCadernetaClass(lancamento: CadernetaDigitalSummary) {
-  const classes: Record<string, string> = {
-    azul: 'text-[#1d4ed8]',
-    preto: 'text-[#111827]',
-    vermelho: 'text-[#dc2626]'
+function situacaoCadernetaBadgeClass(lancamento: CadernetaDigitalSummary) {
+  const situacao = normalizarSituacao(lancamento.situacao)
+  const corSituacao = normalizarSituacao(lancamento.corSituacao)
+
+  if (situacao.includes('recuper')) {
+    return 'border border-[#f59e0b] bg-[#fff7ed] text-[#92400e]'
   }
 
-  return classes[lancamento.corSituacao] ?? 'text-[#62728a]'
+  if (situacao.includes('reprov') || corSituacao === 'vermelho') {
+    return 'border border-[#f2b8b5] bg-[#fff1f1] text-[#b42318]'
+  }
+
+  if (situacao.includes('aprov') || corSituacao === 'azul') {
+    return 'border border-[#b7e4da] bg-[#eaf4f1] text-[#0f766e]'
+  }
+
+  return 'border border-[#d4dee9] bg-[#edf3f8] text-[#071d3b]'
 }
 
 function aprendizadoSituacaoVisual(lancamento: CadernetaDigitalSummary) {
