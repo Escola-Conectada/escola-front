@@ -32,6 +32,7 @@ const route = useRoute()
 
 const routeLabels: Record<string, string> = {
   '/alterar-senha': 'Alterar senha',
+  '/boletim-digital': 'Boletim Digital',
   '/caderneta-digital': 'Caderneta Digital',
   '/calendario-escolar': 'Calendario Escolar',
   '/comunicados': 'Comunicados',

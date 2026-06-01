@@ -11,6 +11,7 @@ export interface UsuarioSummary {
   idPerfil: number
   descricaoPerfil: string
   tipoUsuario?: string
+  boletimDigital?: BoletimDigitalResumoAluno | null
 }
 
 export interface UsuarioForm {
@@ -261,6 +262,85 @@ export interface CadernetaDigitalPayload {
   notas: number[]
   presencas: number
   faltas: number
+}
+
+export interface BoletimDigital {
+  idBoletimDigital?: number | null
+  idAlunoUsuario: number
+  nomeAluno: string
+  emailAluno: string
+  idTipoEnsino: number
+  nomeTipoEnsino: string
+  idTurmaEnsino: number
+  nomeTurmaEnsino: string
+  status: string
+  completo: boolean
+  liberado: boolean
+  pendenteDiretoria: boolean
+  podeSolicitarLiberacao: boolean
+  podeLiberar: boolean
+  podeCompartilhar: boolean
+  totalDisciplinas: number
+  disciplinasLancadas: number
+  disciplinasPendentes: number
+  mediaGeral?: number | null
+  situacaoGeral: string
+  totalPresencas: number
+  totalFaltas: number
+  idProfessorSolicitanteUsuario?: number | null
+  nomeProfessorSolicitante: string
+  solicitadoEmUtc?: string | null
+  idAdministradorLiberacaoUsuario?: number | null
+  nomeAdministradorLiberacao: string
+  liberadoEmUtc?: string | null
+  disciplinas: BoletimDigitalDisciplina[]
+}
+
+export interface BoletimDigitalDisciplina {
+  idDisciplina: number
+  nomeDisciplina: string
+  idProfessorUsuario?: number | null
+  nomeProfessor: string
+  idAreaConhecimento?: number | null
+  nomeAreaConhecimento?: string | null
+  ofertaObrigatoria: boolean
+  matriculaFacultativa: boolean
+  ordem: number
+  lancado: boolean
+  idCadernetaDigital?: number | null
+  notas: number[]
+  mediaAritmetica?: number | null
+  situacao: string
+  corSituacao: string
+  presencas?: number | null
+  faltas?: number | null
+}
+
+export interface BoletimDigitalResumoAluno {
+  idBoletimDigital?: number | null
+  idAlunoUsuario: number
+  nomeAluno: string
+  emailAluno: string
+  idTurmaEnsino: number
+  nomeTurmaEnsino: string
+  status: string
+  completo: boolean
+  liberado: boolean
+  pendenteLiberacao: boolean
+  totalDisciplinas: number
+  disciplinasLancadas: number
+  disciplinasPendentes: number
+  solicitadoEmUtc?: string | null
+  nomeProfessorSolicitante: string
+}
+
+export interface BoletimDigitalCompartilhamento {
+  token: string
+  url: string
+  texto: string
+  emailCompartilhamentoUrl: string
+  whatsAppCompartilhamentoUrl: string
+  expiraEmUtc: string
 }
 
 export interface DisciplinaEvento {

@@ -172,6 +172,7 @@ const tituloPagina = computed(() => {
   if (route.path.startsWith('/usuarios')) return 'Gestao de Usuarios'
   if (route.path.startsWith('/alunos-turmas')) return 'Matriculas de Alunos'
   if (route.path.startsWith('/caderneta-digital')) return 'Caderneta Digital'
+  if (route.path.startsWith('/boletim-digital')) return 'Boletim Digital'
   if (route.path.startsWith('/calendario-escolar')) return 'Calendario Escolar'
   if (route.path.startsWith('/qr-code-bancario')) return 'QR Code Bancario'
   if (route.path.startsWith('/holerite')) return 'Holerite'
