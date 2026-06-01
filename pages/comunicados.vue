@@ -118,6 +118,7 @@ definePageMeta({
 })
 
 const { $api } = useNuxtApp()
+const appConfig = useAppConfigStore()
 
 const form = reactive({
   tipo: 'Comunicado',
@@ -131,7 +132,11 @@ const erro = ref('')
 const ultimoEnvio = ref<NotificacaoEnvio | null>(null)
 
 const tituloPrevia = computed(() => form.titulo || 'Titulo do comunicado')
-const mensagemPrevia = computed(() => form.mensagem || 'Mensagem do comunicado.')
+const mensagemPrevia = computed(() => montarMensagemComunicado(form.mensagem || 'Mensagem do comunicado.'))
+
+onMounted(() => {
+  void appConfig.carregar()
+})
 
 async function enviarComunicado() {
   if (!form.titulo.trim() || !form.mensagem.trim()) {
@@ -142,11 +147,18 @@ async function enviarComunicado() {
   enviando.value = true
   erro.value = ''
   mensagem.value = ''
+  const mensagemComInstituicao = montarMensagemComunicado(form.mensagem.trim())
+
+  if (mensagemComInstituicao.length > 2000) {
+    erro.value = 'A mensagem do comunicado deve ter ate 2000 caracteres.'
+    enviando.value = false
+    return
+  }
 
   const payload: NotificacaoPerfisPayload = {
     tiposUsuario: ['Aluno', 'Professor'],
     titulo: form.titulo.trim(),
-    mensagem: form.mensagem.trim(),
+    mensagem: mensagemComInstituicao,
     tipo: form.tipo,
     link: form.link.trim() || null
   }
@@ -167,5 +179,11 @@ async function enviarComunicado() {
   } finally {
     enviando.value = false
   }
+}
+
+function montarMensagemComunicado(value: string) {
+  return [appConfig.nomeEscola, value.trim()]
+    .filter(Boolean)
+    .join('\n\n')
 }
 </script>

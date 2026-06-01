@@ -242,6 +242,7 @@
       >
         <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Consulta</p>
         <h2 class="mb-3 mt-2 text-xl font-normal text-[#071d3b]">Caderneta Digital</h2>
+        <strong class="mb-3 block break-words text-sm text-[#147f72]">{{ appConfig.nomeEscola }}</strong>
         <p class="m-0 text-sm font-semibold text-[#62728a]">{{ textoPermissao }}</p>
       </aside>
 
@@ -250,6 +251,7 @@
           <div>
             <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">{{ lancamentosVisiveis.length }} registro(s)</p>
             <h2 class="m-0 mt-2 text-xl font-normal text-[#071d3b]">Caderneta Digital</h2>
+            <strong class="mt-1 block break-words text-sm text-[#147f72]">{{ appConfig.nomeEscola }}</strong>
           </div>
           <button
             class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
@@ -566,6 +568,7 @@ interface DisciplinaOpcao {
 }
 
 const auth = useAuthStore()
+const appConfig = useAppConfigStore()
 const { $api } = useNuxtApp()
 const usuarios = ref<UsuarioSummary[]>([])
 const matriculasTurmas = ref<AlunoTurmaEnsino[]>([])
@@ -778,6 +781,7 @@ watch(turmaEnsinoFiltro, () => {
 
 onMounted(async () => {
   instalarEventoNativoLancamento()
+  void appConfig.carregar()
   await carregarDados()
 })
 

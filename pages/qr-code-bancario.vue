@@ -180,6 +180,7 @@ definePageMeta({
 })
 
 const auth = useAuthStore()
+const appConfig = useAppConfigStore()
 const gerando = ref(false)
 const erro = ref('')
 const mensagem = ref('')
@@ -211,7 +212,7 @@ const detalhes = computed(() => {
   ]
 })
 const mensagemCompartilhamento = computed(() =>
-  dadosGerados.value ? montarMensagemCompartilhamento(dadosGerados.value) : ''
+  dadosGerados.value ? montarMensagemCompartilhamento(dadosGerados.value, appConfig.nomeEscola) : ''
 )
 const whatsappHref = computed(() =>
   mensagemCompartilhamento.value
@@ -224,10 +225,11 @@ watch(() => auth.usuario, (usuario) => {
   }
 }, { immediate: true })
 
-onMounted(() => {
+onMounted(async () => {
   if (!auth.isAluno) return
 
-  void gerarQrCode()
+  await appConfig.carregar()
+  await gerarQrCode()
 })
 
 async function gerarQrCode() {
@@ -241,7 +243,7 @@ async function gerarQrCode() {
       valor: form.valor,
       descricao: form.descricao
     })
-    const payload = montarPayloadQrCode(dados)
+    const payload = montarPayloadQrCode(dados, appConfig.nomeEscola)
 
     dadosGerados.value = dados
     qrCodeDataUrl.value = await toDataURL(payload, {
@@ -276,7 +278,7 @@ async function enviarEmail() {
 
   try {
     const abriuEmail = await openEmailCompose({
-      subject: 'QR Code bancario ficticio - Escola Conectada',
+      subject: `QR Code bancario ficticio - ${appConfig.nomeEscola}`,
       body: mensagemCompartilhamento.value
     })
     mensagem.value = abriuEmail

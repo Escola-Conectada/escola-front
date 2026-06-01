@@ -2,7 +2,7 @@
   <section class="w-[min(420px,100%)] rounded-lg border border-[#d4dee9] bg-white p-5 shadow-[0_22px_55px_rgba(14,30,53,0.12)] sm:p-8">
     <div>
       <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">GM Tech Solutions</p>
-      <h1 class="mb-2 mt-2 text-3xl font-normal leading-tight text-[#071d3b] sm:text-4xl">Escola Conectada</h1>
+      <h1 class="mb-2 mt-2 break-words text-3xl font-normal leading-tight text-[#071d3b] sm:text-4xl">{{ appConfig.nomeEscola }}</h1>
       <p class="m-0 text-sm font-bold uppercase text-[#147f72]">Acesso seguro</p>
     </div>
 
@@ -56,6 +56,7 @@ definePageMeta({
 })
 
 const auth = useAuthStore()
+const appConfig = useAppConfigStore()
 const form = reactive({
   email: '',
   senha: ''
@@ -68,6 +69,10 @@ const mostrarAlteracaoSenha = ref(false)
 const erroAlteracao = ref('')
 const mensagemReset = ref('')
 const erroReset = ref('')
+
+onMounted(() => {
+  void appConfig.carregar()
+})
 
 async function entrar() {
   mensagemReset.value = ''

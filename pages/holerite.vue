@@ -275,6 +275,7 @@ definePageMeta({
 })
 
 const auth = useAuthStore()
+const appConfig = useAppConfigStore()
 const { $api } = useNuxtApp()
 const config = useRuntimeConfig()
 const usuarios = ref<UsuarioSummary[]>([])
@@ -323,6 +324,7 @@ const holeritePreview = computed(() => montarHolerite({
 
 onMounted(async () => {
   await auth.validateSession()
+  await appConfig.carregar()
 
   if (auth.isAdmin) {
     await carregarUsuarios()
@@ -383,7 +385,7 @@ async function lancarHolerite() {
   }
 
   const { competenciaAno, competenciaMes } = separarCompetencia(competencia.value)
-  const blob = gerarHoleritePdfBlob(holeritePreview.value)
+  const blob = gerarHoleritePdfBlob(holeritePreview.value, appConfig.nomeEscola)
   const arquivo = new File([blob], nomeArquivoHolerite(holeritePreview.value), { type: 'application/pdf' })
   const formData = new FormData()
   formData.append('competenciaAno', String(competenciaAno))
@@ -406,7 +408,7 @@ async function lancarHolerite() {
 }
 
 function exportarPreviewPdf() {
-  const blob = gerarHoleritePdfBlob(holeritePreview.value)
+  const blob = gerarHoleritePdfBlob(holeritePreview.value, appConfig.nomeEscola)
   baixarBlob(blob, nomeArquivoHolerite(holeritePreview.value))
 }
 
@@ -519,7 +521,7 @@ async function criarLinkCompartilhamento(holerite: Holerite) {
 
 function montarMensagemCompartilhamento(holerite: Holerite, link: string) {
   return [
-    'Escola Conectada',
+    appConfig.nomeEscola,
     `Holerite: ${holerite.competencia}`,
     `Funcionario: ${holerite.nomeUsuario}`,
     `Arquivo: ${holerite.nomeOriginal}`,

@@ -155,6 +155,7 @@ import type { Notificacao } from '~/types/api'
 import { normalizeApiError } from '~/utils/api-client'
 
 const auth = useAuthStore()
+const appConfig = useAppConfigStore()
 const route = useRoute()
 const { $api } = useNuxtApp()
 const notificacoes = ref<Notificacao[]>([])
@@ -174,10 +175,11 @@ const tituloPagina = computed(() => {
   if (route.path.startsWith('/configuracoes')) return 'Configuracoes'
   if (route.path.startsWith('/alterar-senha')) return 'Alterar senha'
 
-  return 'Escola Conectada'
+  return appConfig.nomeEscola
 })
 
 onMounted(() => {
+  void appConfig.carregar()
   carregarNotificacoes()
 })
 

@@ -1,5 +1,5 @@
 <template>
-  <section class="grid gap-4 rounded-lg border border-[#d4dee9] bg-white/30 p-4 shadow-[0_22px_55px_rgba(14,30,53,0.12)] backdrop-blur-[1px] sm:gap-5 sm:p-5 lg:grid-cols-[360px_minmax(0,1fr)]">
+  <section class="grid gap-4 rounded-lg border border-[#d4dee9] bg-white/30 p-4 shadow-[0_22px_55px_rgba(14,30,53,0.12)] backdrop-blur-[1px] sm:gap-5 sm:p-5 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start">
     <aside class="rounded-lg border border-[#d4dee9] bg-white/90 p-4 shadow-[0_22px_55px_rgba(14,30,53,0.08)] backdrop-blur-sm sm:p-6">
       <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Painel</p>
       <h2 class="mb-8 mt-2 text-xl font-normal text-[#071d3b]">Sessao ativa</h2>
@@ -98,7 +98,7 @@ const baseModulos = computed<ModuloPainel[]>(() => [
   { id: 'comunicados', label: 'Comunicados', title: 'Enviar avisos para alunos e professores', to: '/comunicados', icon: Megaphone, show: perfilTipo.value === 'administrador' },
   { id: 'qr-code-bancario', label: 'QR Code', title: 'Gerar dados bancarios ficticios', to: '/qr-code-bancario', icon: QrCode, show: auth.isAluno },
   { id: 'holerite', label: 'Holerite', title: ['administrador', 'diretoria'].includes(perfilTipo.value) ? 'Lancar e consultar PDFs' : 'Consultar meus PDFs', to: '/holerite', icon: FileText, show: ['administrador', 'diretoria', 'professor'].includes(perfilTipo.value) },
-  { id: 'configuracoes', label: 'Configuracoes', title: 'Ajustar tema da aplicacao', to: '/configuracoes', icon: MonitorCog, show: true },
+  { id: 'configuracoes', label: 'Configuracoes', title: auth.isAdmin ? 'Ajustar tema e escola' : 'Ajustar tema da aplicacao', to: '/configuracoes', icon: MonitorCog, show: true },
   { id: 'seguranca', label: 'Seguranca', title: 'Alterar senha', to: '/alterar-senha', icon: ShieldCheck, show: true }
 ].filter((item) => item.show))
 

@@ -113,6 +113,15 @@ export interface NotificacaoEnvio {
   notificacoes: Notificacao[]
 }
 
+export interface ConfiguracaoAplicacao {
+  nomeEscola: string
+  atualizadoEmUtc: string
+}
+
+export interface ConfiguracaoAplicacaoPayload {
+  nomeEscola: string
+}
+
 export interface Perfil {
   idPerfil: number
   descricaoPerfil: string

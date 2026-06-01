@@ -34,6 +34,7 @@ export const BANCOS_FICTICIOS: BancoFicticio[] = [
 ]
 
 const AVISO_FICTICIO = 'SEM VALOR BANCARIO'
+const DEFAULT_NOME_ESCOLA = 'Escola Conectada'
 
 export function criarDadosBancariosFicticios(
   usuario: Pick<UsuarioSummary, 'idUsuario' | 'nome' | 'email'>,
@@ -66,9 +67,11 @@ export function criarDadosBancariosFicticios(
   }
 }
 
-export function montarPayloadQrCode(dados: DadosBancariosFicticios) {
+export function montarPayloadQrCode(dados: DadosBancariosFicticios, nomeEscola = DEFAULT_NOME_ESCOLA) {
+  const instituicao = normalizarNomeEscola(nomeEscola)
+
   return [
-    'ESCOLA CONECTADA - QR CODE BANCARIO FICTICIO',
+    `${instituicao.toUpperCase()} - QR CODE BANCARIO FICTICIO`,
     AVISO_FICTICIO,
     `Referencia: ${dados.referencia}`,
     `Aluno: ${dados.aluno}`,
@@ -84,9 +87,11 @@ export function montarPayloadQrCode(dados: DadosBancariosFicticios) {
   ].join('\n')
 }
 
-export function montarMensagemCompartilhamento(dados: DadosBancariosFicticios) {
+export function montarMensagemCompartilhamento(dados: DadosBancariosFicticios, nomeEscola = DEFAULT_NOME_ESCOLA) {
+  const instituicao = normalizarNomeEscola(nomeEscola)
+
   return [
-    'QR Code bancario ficticio - Escola Conectada',
+    `QR Code bancario ficticio - ${instituicao}`,
     AVISO_FICTICIO,
     '',
     `Aluno: ${dados.aluno}`,
@@ -140,4 +145,8 @@ function slugify(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
+}
+
+function normalizarNomeEscola(value: string) {
+  return value?.trim() || DEFAULT_NOME_ESCOLA
 }

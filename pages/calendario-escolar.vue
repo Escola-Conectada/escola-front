@@ -100,6 +100,7 @@
       >
         <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Consulta</p>
         <h2 class="mb-3 mt-2 text-xl font-normal text-[#071d3b]">Calendario escolar</h2>
+        <strong class="mb-3 block break-words text-sm text-[#147f72]">{{ appConfig.nomeEscola }}</strong>
         <p class="m-0 text-sm font-semibold text-[#62728a]">
           Seu perfil permite visualizar feriados, eventos escolares, avaliacoes e trabalhos marcados pelos professores.
         </p>
@@ -110,6 +111,7 @@
           <div class="min-w-0">
             <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">{{ eventosMesSelecionado.length }} evento(s) no mes</p>
             <h2 class="m-0 mt-2 text-xl font-normal text-[#071d3b]">{{ mesSelecionadoLabel }}</h2>
+            <strong class="mt-1 block break-words text-sm text-[#147f72]">{{ appConfig.nomeEscola }}</strong>
             <p class="m-0 mt-1 text-sm font-semibold text-[#62728a]">Dia selecionado: {{ diaSelecionadoLabel }}</p>
           </div>
           <div class="flex flex-wrap gap-2">
@@ -313,6 +315,7 @@ interface AgendaAcademicaEvento {
 }
 
 const auth = useAuthStore()
+const appConfig = useAppConfigStore()
 const { $api } = useNuxtApp()
 const hoje = new Date()
 const selectedYear = ref(hoje.getFullYear())
@@ -402,6 +405,7 @@ watch(() => agendaForm.data, (value) => {
 })
 
 onMounted(async () => {
+  void appConfig.carregar()
   await carregarDadosCalendario()
 })
 

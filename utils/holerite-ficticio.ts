@@ -2,6 +2,8 @@ import { jsPDF } from 'jspdf'
 import type { UsuarioSummary } from '~/types/api'
 import { getUsuarioPerfilTipo } from '~/utils/usuario-permissions'
 
+const DEFAULT_NOME_ESCOLA = 'Escola Conectada'
+
 export type HoleriteRubricaTipo = 'provento' | 'desconto' | 'informativo'
 
 export interface HoleriteRubricaFicticia {
@@ -103,9 +105,11 @@ export function montarHolerite(input: {
   }
 }
 
-export function montarResumoHolerite(holerite: HoleriteFicticio) {
+export function montarResumoHolerite(holerite: HoleriteFicticio, nomeEscola = DEFAULT_NOME_ESCOLA) {
+  const instituicao = normalizarNomeEscola(nomeEscola)
+
   return [
-    'Holerite - Escola Conectada',
+    `Holerite - ${instituicao}`,
     'Documento gerado pelo sistema escolar.',
     '',
     `Funcionario: ${holerite.funcionario}`,
@@ -121,13 +125,14 @@ export function nomeArquivoHolerite(holerite: Pick<HoleriteFicticio, 'funcionari
   return `holerite-${slug(holerite.funcionario)}-${holerite.competencia}.pdf`
 }
 
-export function gerarHoleritePdfBlob(holerite: HoleriteFicticio) {
+export function gerarHoleritePdfBlob(holerite: HoleriteFicticio, nomeEscola = DEFAULT_NOME_ESCOLA) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  const instituicao = normalizarNomeEscola(nomeEscola)
   let y = 18
 
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(16)
-  doc.text('Escola Conectada', 14, y)
+  doc.text(limitText(doc, instituicao, 116), 14, y)
   doc.setFontSize(12)
   doc.text('Holerite', 14, y + 8)
 
@@ -176,7 +181,7 @@ export function gerarHoleritePdfBlob(holerite: HoleriteFicticio) {
 
   doc.setFontSize(8)
   doc.setFont('helvetica', 'normal')
-  doc.text('Documento gerado eletronicamente pelo sistema Escola Conectada.', 14, 286)
+  doc.text(`Documento gerado eletronicamente pelo sistema ${limitText(doc, instituicao, 110)}.`, 14, 286)
 
   return doc.output('blob')
 }
@@ -331,6 +336,10 @@ function formatarDataHora(value: string) {
 
 function limitText(doc: jsPDF, value: string, maxWidth: number) {
   return doc.splitTextToSize(value || '-', maxWidth)[0] || '-'
+}
+
+function normalizarNomeEscola(value: string) {
+  return value?.trim() || DEFAULT_NOME_ESCOLA
 }
 
 function hashString(value = '') {
