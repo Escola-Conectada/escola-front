@@ -49,7 +49,7 @@
 
       <div class="mt-4 hidden max-h-[520px] overflow-auto rounded-lg border border-[#d4dee9] md:block">
         <table class="w-full table-fixed border-collapse text-left">
-          <thead class="sticky top-0 bg-[#f5f8fb] text-xs uppercase text-[#51627a]">
+          <thead class="sticky top-0 z-10 bg-[#f5f8fb] text-xs uppercase text-[#51627a]">
             <tr>
               <th class="w-[38%] px-4 py-4">Nome</th>
               <th class="w-[13%] px-4 py-4 text-center">Contato</th>

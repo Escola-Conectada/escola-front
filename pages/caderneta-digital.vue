@@ -316,21 +316,20 @@
 
         <div class="mt-4 hidden max-h-[calc(100vh-390px)] min-h-[320px] overflow-auto rounded-lg border border-[#d4dee9] md:block">
           <div
-            class="grid min-w-[980px] items-center gap-3 bg-[#f5f8fb] px-4 py-3 text-xs font-extrabold uppercase text-[#51627a]"
+            class="sticky top-0 z-10 grid min-w-0 items-center gap-3 bg-[#f5f8fb] px-4 py-3 text-xs font-extrabold uppercase text-[#51627a]"
             :style="{ gridTemplateColumns: gradeCadernetaTemplate }"
           >
             <span>Aluno</span>
             <span>Ensino / Turma</span>
             <span>Disciplina</span>
-            <span class="text-center">Aprendizado</span>
-            <span>Frequencia</span>
+            <span class="text-center">Detalhes</span>
             <span v-if="podeAdministrar" class="text-center">Acoes</span>
           </div>
 
           <article
             v-for="lancamento in lancamentosFiltrados"
             :key="lancamento.idCadernetaDigital"
-            class="grid min-w-[980px] items-center gap-3 border-t border-[#d4dee9] px-4 py-4 text-sm"
+            class="grid min-w-0 items-center gap-3 border-t border-[#d4dee9] px-4 py-4 text-sm"
             :style="{ gridTemplateColumns: gradeCadernetaTemplate }"
           >
             <div class="min-w-0">
@@ -348,26 +347,23 @@
             </div>
             <div class="flex justify-center">
               <button
-                class="group relative inline-flex h-10 w-10 items-center justify-center rounded-md border transition focus:outline-none focus:ring-4"
+                class="group relative inline-flex min-h-10 items-center justify-center gap-2 rounded-md border px-3 text-xs font-extrabold transition focus:outline-none focus:ring-4"
                 :class="aprendizadoSituacaoVisual(lancamento).buttonClass"
                 type="button"
-                :title="aprendizadoSituacaoTooltip(lancamento)"
-                :aria-label="aprendizadoSituacaoTooltip(lancamento)"
+                :title="detalhesLancamentoTooltip(lancamento)"
+                :aria-label="detalhesLancamentoTooltip(lancamento)"
                 @click="abrirAprendizado(lancamento)"
               >
                 <component :is="aprendizadoSituacaoVisual(lancamento).icon" class="h-5 w-5" aria-hidden="true" />
+                Detalhes
                 <span
                   class="pointer-events-none absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-extrabold text-white opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100"
                   :class="aprendizadoSituacaoVisual(lancamento).tooltipClass"
                 >
-                  {{ aprendizadoSituacaoTooltip(lancamento) }}
+                  {{ detalhesLancamentoTooltip(lancamento) }}
                 </span>
               </button>
             </div>
-            <span class="text-[#243044]">
-              <strong>{{ lancamento.presencas }}</strong> presencas<br />
-              <strong>{{ lancamento.faltas }}</strong> faltas
-            </span>
             <div v-if="podeAdministrar" class="flex justify-center gap-2">
               <button
                 class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#edf3f8] text-[#071d3b] transition hover:bg-[#dfe8f1]"
@@ -390,10 +386,10 @@
             </div>
           </article>
 
-          <p v-if="!carregando && !lancamentosFiltrados.length" class="m-0 min-w-[980px] border-t border-[#d4dee9] px-4 py-6 text-[#62728a]">
+          <p v-if="!carregando && !lancamentosFiltrados.length" class="m-0 border-t border-[#d4dee9] px-4 py-6 text-[#62728a]">
             Nenhum registro encontrado.
           </p>
-          <p v-if="carregando" class="m-0 min-w-[980px] border-t border-[#d4dee9] px-4 py-6 text-[#62728a]">
+          <p v-if="carregando" class="m-0 border-t border-[#d4dee9] px-4 py-6 text-[#62728a]">
             Carregando caderneta...
           </p>
         </div>
@@ -421,17 +417,17 @@
                 class="group relative inline-flex min-h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-extrabold transition focus:outline-none focus:ring-4"
                 :class="aprendizadoSituacaoVisual(lancamento).buttonClass"
                 type="button"
-                :title="aprendizadoSituacaoTooltip(lancamento)"
-                :aria-label="aprendizadoSituacaoTooltip(lancamento)"
+                :title="detalhesLancamentoTooltip(lancamento)"
+                :aria-label="detalhesLancamentoTooltip(lancamento)"
                 @click="abrirAprendizado(lancamento)"
               >
                 <component :is="aprendizadoSituacaoVisual(lancamento).icon" class="h-5 w-5" aria-hidden="true" />
-                Aprendizado
+                Detalhes
                 <span
                   class="pointer-events-none absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-extrabold text-white opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100"
                   :class="aprendizadoSituacaoVisual(lancamento).tooltipClass"
                 >
-                  {{ aprendizadoSituacaoTooltip(lancamento) }}
+                  {{ detalhesLancamentoTooltip(lancamento) }}
                 </span>
               </button>
               <span><strong>Presencas:</strong> {{ lancamento.presencas }}</span>
@@ -477,7 +473,7 @@
       <article class="grid w-full max-w-lg gap-4 rounded-lg bg-white p-5 shadow-[0_22px_55px_rgba(14,30,53,0.24)]">
         <div class="flex items-start justify-between gap-4">
           <div class="min-w-0">
-            <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Aprendizado</p>
+            <p class="m-0 text-xs font-extrabold uppercase text-[#d64200]">Detalhes do lancamento</p>
             <h2 class="m-0 mt-1 break-words text-xl font-normal text-[#071d3b]">{{ lancamentoAprendizadoPopup.nomeAluno }}</h2>
             <p class="m-0 mt-1 break-words text-sm font-semibold text-[#62728a]">{{ lancamentoAprendizadoPopup.nomeDisciplina }}</p>
             <p class="m-0 mt-1 break-words text-xs font-semibold text-[#7a8798]">
@@ -517,6 +513,14 @@
               <strong class="mt-2 block" :class="situacaoCadernetaClass(lancamentoAprendizadoPopup)">
                 {{ lancamentoAprendizadoPopup.situacao }}
               </strong>
+            </div>
+            <div class="rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-4">
+              <span class="text-xs font-extrabold uppercase text-[#62728a]">Presencas</span>
+              <strong class="mt-2 block text-[#071d3b]">{{ lancamentoAprendizadoPopup.presencas }}</strong>
+            </div>
+            <div class="rounded-md border border-[#d4dee9] bg-[#f8fbfd] p-4">
+              <span class="text-xs font-extrabold uppercase text-[#62728a]">Faltas</span>
+              <strong class="mt-2 block text-[#071d3b]">{{ lancamentoAprendizadoPopup.faltas }}</strong>
             </div>
           </div>
         </div>
@@ -610,8 +614,8 @@ const lancamentoForm = reactive({
 const podeAdministrar = computed(() => auth.isProfessor)
 const gradeCadernetaTemplate = computed(() =>
   podeAdministrar.value
-    ? 'minmax(150px,1.15fr) minmax(130px,0.9fr) minmax(170px,1.15fr) 110px minmax(95px,0.65fr) 88px'
-    : 'minmax(150px,1.2fr) minmax(130px,0.95fr) minmax(170px,1.15fr) 110px minmax(95px,0.7fr)'
+    ? 'minmax(130px,1.1fr) minmax(120px,0.9fr) minmax(160px,1.25fr) 118px 88px'
+    : 'minmax(130px,1.1fr) minmax(120px,0.95fr) minmax(160px,1.25fr) 118px'
 )
 const alunosDisponiveis = computed(() => {
   const alunosTurmaIds = new Set(matriculasTurmas.value
@@ -1211,6 +1215,10 @@ function aprendizadoSituacaoVisual(lancamento: CadernetaDigitalSummary) {
 
 function aprendizadoSituacaoTooltip(lancamento: CadernetaDigitalSummary) {
   return `Situacao: ${formatarSituacaoAprendizado(lancamento)}`
+}
+
+function detalhesLancamentoTooltip(lancamento: CadernetaDigitalSummary) {
+  return `${aprendizadoSituacaoTooltip(lancamento)}. Presencas: ${lancamento.presencas}. Faltas: ${lancamento.faltas}.`
 }
 
 function formatarSituacaoAprendizado(lancamento: CadernetaDigitalSummary) {

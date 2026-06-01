@@ -133,7 +133,7 @@
 
         <div class="mt-4 hidden max-h-[560px] overflow-auto rounded-lg border border-[#d4dee9] md:block">
           <table class="w-full min-w-[760px] table-fixed border-collapse text-left">
-            <thead class="sticky top-0 bg-[#f5f8fb] text-xs uppercase text-[#51627a]">
+            <thead class="sticky top-0 z-10 bg-[#f5f8fb] text-xs uppercase text-[#51627a]">
               <tr>
                 <th class="w-[35%] px-4 py-4">Aluno</th>
                 <th class="w-[28%] px-4 py-4">Turma</th>
