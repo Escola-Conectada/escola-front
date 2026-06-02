@@ -271,7 +271,7 @@ function agendarCarregamentoContadorNotificacoes() {
     return
   }
 
-  window.setTimeout(carregar, 250)
+  globalThis.setTimeout(carregar, 250)
 }
 
 async function abrirNotificacao(notificacao: Notificacao) {
