@@ -31,6 +31,13 @@ describe('api-client', () => {
     expect(resolveApiBase('', 'escola-conectada.vercel.app')).toBe('/api')
   })
 
+  it('adds the API prefix to absolute public backend URLs', () => {
+    expect(resolveApiBase('https://escola-api-yrns.onrender.com', 'escola-high-conectada.vercel.app'))
+      .toBe('https://escola-api-yrns.onrender.com/api')
+    expect(resolveApiBase('https://escola-api-yrns.onrender.com/api', 'escola-high-conectada.vercel.app'))
+      .toBe('https://escola-api-yrns.onrender.com/api')
+  })
+
   it('calls the unauthorized handler on 401 responses', async () => {
     const onUnauthorized = vi.fn()
     const fetchMock = vi.fn().mockRejectedValue({ response: { status: 401 } })

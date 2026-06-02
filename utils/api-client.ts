@@ -37,6 +37,11 @@ export function resolveApiBase(apiBase: string, hostname = getBrowserHostname())
     return '/api'
   }
 
+  const absoluteApiBase = appendApiPathForAbsoluteUrl(normalizedApiBase)
+  if (absoluteApiBase) {
+    return absoluteApiBase
+  }
+
   return normalizedApiBase
 }
 
@@ -123,6 +128,27 @@ function isLocalApiUrl(value: string): boolean {
     return isLocalHostname(new URL(value).hostname)
   } catch {
     return false
+  }
+}
+
+function appendApiPathForAbsoluteUrl(value: string): string | null {
+  try {
+    const url = new URL(value)
+    const pathname = url.pathname.replace(/\/+$/, '')
+
+    if (!pathname || pathname === '') {
+      url.pathname = '/api'
+      return url.toString().replace(/\/$/, '')
+    }
+
+    if (!pathname.toLowerCase().endsWith('/api')) {
+      url.pathname = `${pathname}/api`
+      return url.toString().replace(/\/$/, '')
+    }
+
+    return url.toString().replace(/\/$/, '')
+  } catch {
+    return null
   }
 }
 
