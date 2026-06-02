@@ -6,6 +6,8 @@ interface ApiClientConfig {
   baseURL: string
   getToken: () => string | null
   onUnauthorized?: () => void
+  onRequestStart?: () => void
+  onRequestEnd?: () => void
 }
 
 export function createApiClient(config: ApiClientConfig): ApiClient {
@@ -13,6 +15,8 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
     const headers = buildHeaders(options.headers, config.getToken())
     const apiFetch = $fetch as unknown as $Fetch
     const baseURL = resolveApiBase(config.baseURL)
+
+    config.onRequestStart?.()
 
     try {
       return await apiFetch<T>(path, {
@@ -26,6 +30,8 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
       }
 
       throw error
+    } finally {
+      config.onRequestEnd?.()
     }
   }
 }

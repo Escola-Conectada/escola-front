@@ -53,6 +53,46 @@ describe('api-client', () => {
     expect(onUnauthorized).toHaveBeenCalledTimes(1)
   })
 
+  it('notifies the request lifecycle on successful requests', async () => {
+    const onRequestStart = vi.fn()
+    const onRequestEnd = vi.fn()
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+    vi.stubGlobal('$fetch', fetchMock)
+
+    const api = createApiClient({
+      baseURL: 'http://localhost:5001/api',
+      getToken: () => null,
+      onRequestStart,
+      onRequestEnd
+    })
+
+    await api('/usuarios')
+
+    expect(onRequestStart).toHaveBeenCalledTimes(1)
+    expect(onRequestEnd).toHaveBeenCalledTimes(1)
+    expect(onRequestEnd.mock.invocationCallOrder[0]).toBeGreaterThan(onRequestStart.mock.invocationCallOrder[0])
+  })
+
+  it('finishes the request lifecycle when the API rejects', async () => {
+    const onRequestStart = vi.fn()
+    const onRequestEnd = vi.fn()
+    const error = { message: 'Falha ao salvar' }
+    const fetchMock = vi.fn().mockRejectedValue(error)
+    vi.stubGlobal('$fetch', fetchMock)
+
+    const api = createApiClient({
+      baseURL: 'http://localhost:5001/api',
+      getToken: () => null,
+      onRequestStart,
+      onRequestEnd
+    })
+
+    await expect(api('/usuarios')).rejects.toEqual(error)
+
+    expect(onRequestStart).toHaveBeenCalledTimes(1)
+    expect(onRequestEnd).toHaveBeenCalledTimes(1)
+  })
+
   it('normalizes validation errors returned by the API', () => {
     const message = normalizeApiError({
       response: {
