@@ -14,6 +14,10 @@ interface StoredSession {
   deveAlterarSenhaPadrao: boolean
 }
 
+interface SetSessionOptions {
+  validated?: boolean
+}
+
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(null)
   const expiraEm = ref<string | null>(null)
@@ -41,7 +45,7 @@ export const useAuthStore = defineStore('auth', () => {
         body: credentials
       })
 
-      setSession(response)
+      setSession(response, { validated: true })
       return response
     } catch (err) {
       error.value = normalizeApiError(err)
@@ -91,6 +95,7 @@ export const useAuthStore = defineStore('auth', () => {
         body: payload
       })
       deveAlterarSenhaPadrao.value = false
+      sessionValidated.value = true
       persist()
       return usuario.value
     } catch (err) {
@@ -119,12 +124,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  function setSession(session: AuthResponse | StoredSession) {
+  function setSession(session: AuthResponse | StoredSession, options: SetSessionOptions = {}) {
     token.value = session.token
     expiraEm.value = session.expiraEm
     usuario.value = session.usuario
     deveAlterarSenhaPadrao.value = Boolean(session.deveAlterarSenhaPadrao)
-    sessionValidated.value = false
+    sessionValidated.value = Boolean(options.validated)
     persist()
   }
 

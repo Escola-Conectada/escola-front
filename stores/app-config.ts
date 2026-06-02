@@ -13,32 +13,42 @@ export const useAppConfigStore = defineStore('app-config', () => {
   const salvando = ref(false)
   const error = ref('')
   const loaded = ref(false)
+  let carregarRequest: Promise<ConfiguracaoAplicacao> | null = null
 
   async function carregar(force = false) {
     if (loaded.value && !force) {
-      return {
-        nomeEscola: nomeEscola.value,
-        atualizadoEmUtc: atualizadoEmUtc.value
-      }
+      return getCurrentConfig()
+    }
+
+    if (carregarRequest && !force) {
+      return carregarRequest
     }
 
     carregando.value = true
     error.value = ''
 
-    try {
-      const { $api } = useNuxtApp()
-      const response = await $api<ConfiguracaoAplicacao>('/configuracoes/aplicacao')
-      aplicar(response)
-      loaded.value = true
-      return response
-    } catch (err) {
-      error.value = normalizeApiError(err)
-      return {
-        nomeEscola: nomeEscola.value,
-        atualizadoEmUtc: atualizadoEmUtc.value
+    const request = (async () => {
+      try {
+        const { $api } = useNuxtApp()
+        const response = await $api<ConfiguracaoAplicacao>('/configuracoes/aplicacao')
+        aplicar(response)
+        loaded.value = true
+        return response
+      } catch (err) {
+        error.value = normalizeApiError(err)
+        return getCurrentConfig()
       }
+    })()
+
+    carregarRequest = request
+
+    try {
+      return await request
     } finally {
-      carregando.value = false
+      if (carregarRequest === request) {
+        carregarRequest = null
+        carregando.value = false
+      }
     }
   }
 
@@ -66,6 +76,13 @@ export const useAppConfigStore = defineStore('app-config', () => {
   function aplicar(configuracao: ConfiguracaoAplicacao) {
     nomeEscola.value = configuracao.nomeEscola?.trim() || DEFAULT_SCHOOL_NAME
     atualizadoEmUtc.value = configuracao.atualizadoEmUtc || ''
+  }
+
+  function getCurrentConfig(): ConfiguracaoAplicacao {
+    return {
+      nomeEscola: nomeEscola.value,
+      atualizadoEmUtc: atualizadoEmUtc.value
+    }
   }
 
   return {

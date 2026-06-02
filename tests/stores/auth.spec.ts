@@ -49,6 +49,30 @@ describe('auth store', () => {
     expect(localStorage.getItem('form-escola-auth')).toContain('jwt-token')
   })
 
+  it('reuses the login response as the first validated session', async () => {
+    const response: AuthResponse = {
+      token: 'jwt-token',
+      expiraEm: '2026-05-21T22:00:00Z',
+      deveAlterarSenhaPadrao: false,
+      usuario: {
+        idUsuario: 1,
+        nome: 'Administrador Sistema',
+        email: 'admin@escola.com',
+        telefone: '11999990001',
+        idPerfil: 1,
+        descricaoPerfil: 'Administrador'
+      }
+    }
+    apiMock.mockResolvedValue(response)
+
+    const auth = useAuthStore()
+    await auth.login({ email: 'admin@escola.com', senha: 'Senha@123' })
+    const usuario = await auth.validateSession()
+
+    expect(apiMock).toHaveBeenCalledTimes(1)
+    expect(usuario?.email).toBe('admin@escola.com')
+  })
+
   it('clears session on logout', () => {
     const auth = useAuthStore()
     auth.setSession({

@@ -162,12 +162,17 @@ const appConfig = useAppConfigStore()
 const route = useRoute()
 const { $api } = useNuxtApp()
 const notificacoes = ref<Notificacao[]>([])
+const totalNotificacoesNaoLidas = ref<number | null>(null)
 const notificacoesAbertas = ref(false)
 const notificacaoSelecionada = ref<Notificacao | null>(null)
 const carregandoNotificacoes = ref(false)
+let notificacoesRequest: Promise<void> | null = null
+let contadorRequest: Promise<void> | null = null
 
 const nomeUsuario = computed(() => auth.usuario?.nome || auth.perfil || 'Usuario')
-const notificacoesNaoLidas = computed(() => notificacoes.value.filter((notificacao) => !notificacao.lida).length)
+const notificacoesNaoLidas = computed(() =>
+  totalNotificacoesNaoLidas.value ?? notificacoes.value.filter((notificacao) => !notificacao.lida).length
+)
 const tituloPagina = computed(() => {
   if (route.path.startsWith('/usuarios')) return 'Gestao de Usuarios'
   if (route.path.startsWith('/alunos-turmas')) return 'Matriculas de Alunos'
@@ -184,16 +189,17 @@ const tituloPagina = computed(() => {
 
 onMounted(() => {
   void appConfig.carregar()
-  carregarNotificacoes()
+  agendarCarregamentoContadorNotificacoes()
 })
 
 watch(() => auth.token, (token) => {
   notificacoes.value = []
+  totalNotificacoesNaoLidas.value = null
   notificacoesAbertas.value = false
   notificacaoSelecionada.value = null
 
   if (token) {
-    carregarNotificacoes()
+    agendarCarregamentoContadorNotificacoes()
   }
 })
 
@@ -208,14 +214,21 @@ function sair() {
 
 async function carregarNotificacoes() {
   if (!auth.token) return
+  if (notificacoesRequest) return notificacoesRequest
 
   carregandoNotificacoes.value = true
 
-  try {
+  notificacoesRequest = (async () => {
     notificacoes.value = await $api<Notificacao[]>('/notificacoes')
+    totalNotificacoesNaoLidas.value = notificacoes.value.filter((notificacao) => !notificacao.lida).length
+  })()
+
+  try {
+    await notificacoesRequest
   } catch (err) {
     console.warn(normalizeApiError(err))
   } finally {
+    notificacoesRequest = null
     carregandoNotificacoes.value = false
   }
 }
@@ -226,6 +239,39 @@ async function alternarNotificacoes() {
   if (notificacoesAbertas.value) {
     await carregarNotificacoes()
   }
+}
+
+async function carregarContadorNotificacoes() {
+  if (!auth.token) return
+  if (contadorRequest) return contadorRequest
+
+  contadorRequest = (async () => {
+    const response = await $api<{ total: number }>('/notificacoes/nao-lidas/contador')
+    totalNotificacoesNaoLidas.value = response.total
+  })()
+
+  try {
+    await contadorRequest
+  } catch (err) {
+    console.warn(normalizeApiError(err))
+  } finally {
+    contadorRequest = null
+  }
+}
+
+function agendarCarregamentoContadorNotificacoes() {
+  if (!auth.token || typeof window === 'undefined') return
+
+  const carregar = () => {
+    void carregarContadorNotificacoes()
+  }
+
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(carregar, { timeout: 1500 })
+    return
+  }
+
+  window.setTimeout(carregar, 250)
 }
 
 async function abrirNotificacao(notificacao: Notificacao) {
@@ -243,6 +289,7 @@ async function abrirNotificacao(notificacao: Notificacao) {
     notificacoes.value = notificacoes.value.map((item) =>
       item.idNotificacao === updated.idNotificacao ? updated : item
     )
+    totalNotificacoesNaoLidas.value = notificacoes.value.filter((item) => !item.lida).length
     notificacaoSelecionada.value = updated
   } catch (err) {
     console.warn(normalizeApiError(err))
@@ -259,6 +306,7 @@ async function marcarTodasComoLidas() {
       lida: true,
       lidaEmUtc: notificacao.lidaEmUtc ?? new Date().toISOString()
     }))
+    totalNotificacoesNaoLidas.value = 0
   } catch (err) {
     console.warn(normalizeApiError(err))
   }
