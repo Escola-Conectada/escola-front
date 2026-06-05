@@ -26,20 +26,21 @@
             {{ nomeUsuario }}
           </p>
         </div>
-        <div class="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-3">
+        <div class="grid w-full grid-cols-3 gap-2 sm:w-auto">
           <div class="relative">
             <button
-              class="relative inline-flex min-h-11 w-full items-center gap-2 rounded-md bg-[#eaf4f1] px-4 text-sm font-extrabold text-[#006b61] transition hover:bg-[#dcefeb]"
+              class="relative inline-flex min-h-14 w-full flex-col items-center justify-center gap-1 rounded-md bg-[#eaf4f1] px-2 text-center text-xs font-extrabold text-[#006b61] transition hover:bg-[#dcefeb] sm:min-h-11 sm:flex-row sm:gap-2 sm:px-4 sm:text-sm"
               type="button"
               title="Notificacoes"
               aria-label="Notificacoes"
               @click="alternarNotificacoes"
             >
               <Bell class="h-5 w-5" aria-hidden="true" />
-              Notificacoes
+              <span class="min-w-0 break-words leading-tight sm:hidden">Avisos</span>
+              <span class="hidden sm:inline">Notificacoes</span>
               <span
                 v-if="notificacoesNaoLidas > 0"
-                class="ml-auto inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[#d64200] px-1 text-xs font-extrabold text-white"
+                class="absolute right-1 top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[#d64200] px-1 text-xs font-extrabold text-white sm:-right-2 sm:-top-2"
               >
                 {{ notificacoesNaoLidas }}
               </span>
@@ -47,7 +48,7 @@
 
             <div
               v-if="notificacoesAbertas"
-              class="absolute right-0 z-30 mt-2 grid w-[min(92vw,380px)] gap-3 rounded-lg border border-[#d4dee9] bg-white p-3 text-left shadow-[0_22px_55px_rgba(14,30,53,0.18)]"
+              class="absolute left-0 right-auto z-30 mt-2 grid w-[min(calc(100vw-1.5rem),380px)] gap-3 rounded-lg border border-[#d4dee9] bg-white p-3 text-left shadow-[0_22px_55px_rgba(14,30,53,0.18)] sm:left-auto sm:right-0 sm:w-[min(92vw,380px)]"
             >
               <div class="flex items-center justify-between gap-3">
                 <strong class="text-sm text-[#071d3b]">Notificacoes</strong>
@@ -89,14 +90,15 @@
             </div>
           </div>
           <NuxtLink
-            class="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#eaf4f1] px-4 text-sm font-extrabold text-[#006b61] no-underline transition hover:bg-[#dcefeb]"
+            class="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-md bg-[#eaf4f1] px-2 text-center text-xs font-extrabold text-[#006b61] no-underline transition hover:bg-[#dcefeb] sm:min-h-11 sm:flex-row sm:gap-2 sm:px-4 sm:text-sm"
             to="/alterar-senha"
           >
             <KeyRound class="h-5 w-5" aria-hidden="true" />
-            Alterar senha
+            <span class="min-w-0 break-words leading-tight sm:hidden">Senha</span>
+            <span class="hidden sm:inline">Alterar senha</span>
           </NuxtLink>
           <button
-            class="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#eaf4f1] px-4 text-sm font-extrabold text-[#006b61] transition hover:bg-[#dcefeb]"
+            class="inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-md bg-[#eaf4f1] px-2 text-center text-xs font-extrabold text-[#006b61] transition hover:bg-[#dcefeb] sm:min-h-11 sm:flex-row sm:gap-2 sm:px-4 sm:text-sm"
             type="button"
             @click="sair"
           >
