@@ -49,6 +49,35 @@ describe('auth store', () => {
     expect(localStorage.getItem('form-escola-auth')).toContain('jwt-token')
   })
 
+  it('stores JWT session after Google login', async () => {
+    const response: AuthResponse = {
+      token: 'jwt-token-google',
+      expiraEm: '2026-05-21T22:00:00Z',
+      deveAlterarSenhaPadrao: false,
+      usuario: {
+        idUsuario: 1,
+        nome: 'Administrador Sistema',
+        email: 'admin@escola.com',
+        telefone: '11999990001',
+        idPerfil: 1,
+        descricaoPerfil: 'Administrador'
+      }
+    }
+    apiMock.mockResolvedValue(response)
+
+    const auth = useAuthStore()
+    await auth.loginWithGoogle('google-id-token')
+
+    expect(apiMock).toHaveBeenCalledWith('/auth/google', {
+      method: 'POST',
+      body: { idToken: 'google-id-token' }
+    })
+    expect(auth.token).toBe('jwt-token-google')
+    expect(auth.isAuthenticated).toBe(true)
+    expect(auth.isAdmin).toBe(true)
+    expect(localStorage.getItem('form-escola-auth')).toContain('jwt-token-google')
+  })
+
   it('reuses the login response as the first validated session', async () => {
     const response: AuthResponse = {
       token: 'jwt-token',

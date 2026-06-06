@@ -55,6 +55,7 @@ Variaveis suportadas:
 | Variavel | Padrao local | Descricao |
 | --- | --- | --- |
 | `NUXT_PUBLIC_API_BASE` | `http://localhost:5001/api` em dev, `/api` em build sem variavel | URL base da API consumida pelo front |
+| `NUXT_PUBLIC_GOOGLE_CLIENT_ID` | vazio | OAuth Client ID web do Google usado no login com Google |
 | `NUXT_APP_BASE_URL` | `/` | Base URL da aplicacao Nuxt |
 
 Em deploy na Vercel, Render ou GitHub Pages, configure `NUXT_PUBLIC_API_BASE` com a URL publica do backend. Nao use `localhost` em producao, porque no navegador ele aponta para a maquina do usuario.
@@ -67,6 +68,8 @@ No Render, crie o front como `Static Site` e use:
 | Build Command | `npm run generate` |
 | Publish Directory | `.output/public` |
 | Environment Variable | `NUXT_PUBLIC_API_BASE=https://sua-api-publica.com/api` |
+
+Se o login com Google estiver habilitado, adicione tambem `NUXT_PUBLIC_GOOGLE_CLIENT_ID` com o OAuth Client ID web.
 
 Tambem adicione uma regra de rewrite para a SPA:
 
@@ -190,7 +193,7 @@ Observacao: o front controla a experiencia e evita acoes indevidas na UI, mas a 
 
 Arquivos principais:
 
-- `stores/auth.ts`: login, logout, persistencia da sessao, validacao via `/auth/me` e alteracao de senha.
+- `stores/auth.ts`: login por email/senha, login com Google, logout, persistencia da sessao, validacao via `/auth/me` e alteracao de senha.
 - `middleware/auth.global.ts`: guarda global de rotas.
 - `plugins/api.ts`: injeta `$api` com token JWT e tratamento de `401`.
 - `utils/api-client.ts`: monta headers, normaliza erros e executa chamadas HTTP.
@@ -333,7 +336,7 @@ Endpoints consumidos:
 
 | Modulo | Endpoints |
 | --- | --- |
-| Auth | `POST /auth/login`, `GET /auth/me`, `POST /auth/alterar-senha`, `POST /auth/esqueci-senha` |
+| Auth | `POST /auth/login`, `POST /auth/google`, `GET /auth/me`, `POST /auth/alterar-senha`, `POST /auth/esqueci-senha` |
 | Usuarios | `GET /usuarios`, `GET /usuarios/:id`, `POST /usuarios`, `PUT /usuarios/:id`, `DELETE /usuarios/:id`, `GET /usuarios/perfis` |
 | Arquivos de usuario | `GET /usuarios/:id/arquivos`, `GET /usuarios/:id/foto`, `POST /usuarios/:id/foto`, `POST /usuarios/:id/certificados`, `GET /usuarios/:id/arquivos/:arquivoId/download`, `DELETE /usuarios/:id/arquivos/:arquivoId` |
 | Notificacoes | `GET /notificacoes`, `POST /notificacoes`, `POST /notificacoes/perfis`, `PATCH /notificacoes/:id/lida`, `PATCH /notificacoes/lidas` |

@@ -153,6 +153,10 @@ export interface LoginCredentials {
   senha: string
 }
 
+export interface GoogleLoginPayload {
+  idToken: string
+}
+
 export interface AuthResponse {
   token: string
   expiraEm: string

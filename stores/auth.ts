@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { useNuxtApp } from '#app'
-import type { AlterarSenhaPayload, AuthResponse, EsqueciSenhaPayload, EsqueciSenhaResponse, LoginCredentials, UsuarioSummary } from '~/types/api'
+import type { AlterarSenhaPayload, AuthResponse, EsqueciSenhaPayload, EsqueciSenhaResponse, GoogleLoginPayload, LoginCredentials, UsuarioSummary } from '~/types/api'
 import { normalizeApiError } from '~/utils/api-client'
 import { canCreateAlunoUsuarios, canManageAllUsuarios, getUsuarioPerfilTipo, isPerfilProfessor } from '~/utils/usuario-permissions'
 
@@ -43,6 +43,28 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await $api<AuthResponse>('/auth/login', {
         method: 'POST',
         body: credentials
+      })
+
+      setSession(response, { validated: true })
+      return response
+    } catch (err) {
+      error.value = normalizeApiError(err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function loginWithGoogle(idToken: string) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { $api } = useNuxtApp()
+      const payload: GoogleLoginPayload = { idToken }
+      const response = await $api<AuthResponse>('/auth/google', {
+        method: 'POST',
+        body: payload
       })
 
       setSession(response, { validated: true })
@@ -205,6 +227,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAluno,
     canWrite,
     login,
+    loginWithGoogle,
     fetchMe,
     alterarSenha,
     resetarSenhaPadrao,

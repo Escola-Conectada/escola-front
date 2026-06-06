@@ -45,6 +45,7 @@ Variaveis:
 | Variavel | Uso |
 | --- | --- |
 | `NUXT_PUBLIC_API_BASE` | URL publica/base da API |
+| `NUXT_PUBLIC_GOOGLE_CLIENT_ID` | OAuth Client ID web do Google usado no login com Google |
 | `NUXT_APP_BASE_URL` | Base URL da aplicacao |
 
 ## 4. Estrutura de diretorios
@@ -77,7 +78,7 @@ Arquivos:
 
 Fluxo:
 
-1. O usuario autentica em `/login`.
+1. O usuario autentica em `/login` por email/senha ou pelo botao Google.
 2. A resposta de login e persistida no `localStorage` com a chave `form-escola-auth`.
 3. O middleware global carrega a sessao, valida via `/auth/me` e protege rotas privadas.
 4. O plugin `$api` injeta o token JWT no header `Authorization`.
@@ -358,7 +359,7 @@ Funcionalidades locais sem contrato de API:
 
 | Modulo | Endpoints |
 | --- | --- |
-| Auth | `POST /auth/login`, `GET /auth/me`, `POST /auth/alterar-senha`, `POST /auth/esqueci-senha` |
+| Auth | `POST /auth/login`, `POST /auth/google`, `GET /auth/me`, `POST /auth/alterar-senha`, `POST /auth/esqueci-senha` |
 | Usuarios | `GET /usuarios`, `GET /usuarios/:id`, `POST /usuarios`, `PUT /usuarios/:id`, `DELETE /usuarios/:id`, `GET /usuarios/perfis` |
 | Arquivos | `GET /usuarios/:id/arquivos`, `GET /usuarios/:id/foto`, `POST /usuarios/:id/foto`, `POST /usuarios/:id/certificados`, `GET /usuarios/:id/arquivos/:arquivoId/download`, `DELETE /usuarios/:id/arquivos/:arquivoId` |
 | Notificacoes | `GET /notificacoes`, `POST /notificacoes`, `POST /notificacoes/perfis`, `PATCH /notificacoes/:id/lida`, `PATCH /notificacoes/lidas` |

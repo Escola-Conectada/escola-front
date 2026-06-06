@@ -21,6 +21,23 @@
         {{ auth.loading ? 'Entrando...' : 'Entrar' }}
       </button>
 
+      <div v-if="googleClientId" class="grid gap-4">
+        <div class="flex items-center gap-3 text-xs font-extrabold uppercase text-[#62728a]" aria-hidden="true">
+          <span class="h-px flex-1 bg-[#d4dee9]" />
+          <span>ou</span>
+          <span class="h-px flex-1 bg-[#d4dee9]" />
+        </div>
+
+        <GoogleSignInButton
+          :client-id="googleClientId"
+          :disabled="auth.loading"
+          @credential="entrarComGoogle"
+          @error="erroGoogle = $event"
+        />
+
+        <p v-if="erroGoogle" class="alert alert-error">{{ erroGoogle }}</p>
+      </div>
+
       <button class="inline-flex min-h-10 items-center justify-center rounded-md border border-[#147f72] bg-white px-4 text-sm font-extrabold text-[#147f72] transition hover:bg-[#e9f7f5] disabled:cursor-wait disabled:opacity-70" type="button" :disabled="auth.loading" @click="abrirTrocaSenha">
         Esqueceu a senha?
       </button>
@@ -69,6 +86,7 @@ definePageMeta({
 
 const auth = useAuthStore()
 const appConfig = useAppConfigStore()
+const config = useRuntimeConfig()
 const form = reactive({
   email: '',
   senha: ''
@@ -81,6 +99,8 @@ const mostrarAlteracaoSenha = ref(false)
 const trocaSolicitada = ref(false)
 const erroAlteracao = ref('')
 const erroReset = ref('')
+const erroGoogle = ref('')
+const googleClientId = computed(() => String(config.public.googleClientId || '').trim())
 const mensagemTrocaSenha = computed(() =>
   trocaSolicitada.value
     ? 'Informe sua senha atual ou a senha padrao para definir uma nova senha.'
@@ -93,6 +113,7 @@ onMounted(() => {
 
 async function entrar() {
   erroReset.value = ''
+  erroGoogle.value = ''
   trocaSolicitada.value = false
 
   const response = await auth.login(form)
@@ -104,9 +125,29 @@ async function entrar() {
   await navigateTo('/')
 }
 
+async function entrarComGoogle(credential: string) {
+  erroReset.value = ''
+  erroAlteracao.value = ''
+  erroGoogle.value = ''
+  trocaSolicitada.value = false
+
+  try {
+    const response = await auth.loginWithGoogle(credential)
+    if (response.deveAlterarSenhaPadrao) {
+      mostrarAlteracaoSenha.value = true
+      return
+    }
+
+    await navigateTo('/')
+  } catch {
+    // A store ja normaliza a mensagem em auth.error.
+  }
+}
+
 function abrirTrocaSenha() {
   erroReset.value = ''
   erroAlteracao.value = ''
+  erroGoogle.value = ''
 
   if (!form.email) {
     erroReset.value = 'Informe o email para alterar a senha.'
